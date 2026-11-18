@@ -6,9 +6,11 @@ import { loadMe, type Me } from "@/lib/data/me";
 import type { ServerClient } from "@/lib/supabase/server";
 
 export function authorizeCron(req: NextRequest): NextResponse | null {
-  const secret = serverEnv().cronSecret;
-  const auth = req.headers.get("authorization");
-  if (!secret || auth !== `Bearer ${secret}`) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  const secret = serverEnv().cronSecret.trim();
+  // 500 = falta configurar CRON_SECRET en el deploy (o no se redeployó); 401 = el secreto no coincide
+  if (!secret) return NextResponse.json({ error: "CRON_SECRET no está configurado en este deploy" }, { status: 500 });
+  const auth = (req.headers.get("authorization") ?? "").trim();
+  if (auth !== `Bearer ${secret}`) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   return null;
 }
 

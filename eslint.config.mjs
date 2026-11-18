@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Script de Node (CommonJS) para generar el video tutorial; no es código de la app
+    "scripts/tutorial/**",
+    ".video/**",
   ]),
 ]);
 
