@@ -33,6 +33,20 @@ export async function generateProgramAction(): Promise<{ ok: true; source: "ai" 
     extraInjuries: (pains.data ?? []).map((p) => PAIN_ZONES.find((z) => z.value === p.zone)?.label ?? p.zone).join(", "),
     recentPain: (pains.data ?? []).map((p) => `${p.zone} ${p.intensity}/10`),
   });
+  // ¿Terminó el mesociclo anterior? (pasaron sus semanas y hizo ≥ 75 % de las sesiones) → logro
+  const prev = await c.supabase.from("programs").select("id, start_date, weeks").eq("user_id", c.userId).eq("status", "active").maybeSingle();
+  if (prev.data) {
+    const { programWeek } = await import("@/lib/data/training");
+    if (programWeek(prev.data.start_date, me.today) > prev.data.weeks) {
+      const sess = await c.supabase.from("program_sessions").select("id").eq("program_id", prev.data.id);
+      const ids = (sess.data ?? []).map((x) => x.id);
+      const done = ids.length ? await c.supabase.from("workout_sessions").select("program_session_id").in("program_session_id", ids).not("ended_at", "is", null) : { data: [] };
+      if (ids.length && new Set((done.data ?? []).map((d) => d.program_session_id)).size >= ids.length * 0.75) {
+        await unlockAchievements(c.supabase, c.userId, ["meso_complete"]);
+        await c.supabase.from("programs").update({ status: "completed" }).eq("id", prev.data.id);
+      }
+    }
+  }
   const saved = await saveProgram(c.supabase, me, gen);
   if (!saved.ok) return saved;
   revalidatePath("/", "layout");

@@ -59,6 +59,32 @@ export interface GeneratedProgram {
   changes: string[];
 }
 
+/** Historial para el próximo mesociclo: tests, mejores 1RM estimados y adherencia de las últimas semanas. */
+async function trainingHistory(supabase: ServerClient, me: Me) {
+  const since = new Date(Date.now() - 42 * 86_400_000).toISOString().slice(0, 10);
+  const [tests, sets, workouts] = await Promise.all([
+    supabase.from("fitness_tests").select("test, value, unit, log_date").eq("user_id", me.userId).order("log_date", { ascending: false }).limit(12),
+    supabase.from("set_logs").select("exercise_id, kg, reps").eq("user_id", me.userId).gte("created_at", since).limit(1000),
+    supabase.from("workout_sessions").select("feeling").eq("user_id", me.userId).gte("log_date", since).not("ended_at", "is", null),
+  ]);
+  const best = new Map<string, number>();
+  for (const s of sets.data ?? []) {
+    const e1 = Number(s.kg) * (1 + s.reps / 30);
+    if (Number(s.kg) > 0 && e1 > (best.get(s.exercise_id) ?? 0)) best.set(s.exercise_id, e1);
+  }
+  const feelings = (workouts.data ?? []).map((w) => w.feeling).filter((f): f is number => f != null);
+  return {
+    tests: (tests.data ?? []).map((t) => `${t.test}: ${t.value} ${t.unit} (${t.log_date})`),
+    mejores_1rm_estimados: [...best.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 8)
+      .map(([id, v]) => `${LIBRARY_BY_ID[id]?.name ?? id}: ${Math.round(v)} kg`),
+    sesiones_hechas_6_semanas: (workouts.data ?? []).length,
+    sesiones_planificadas_6_semanas: (me.gym?.weekdays?.length ?? 0) * 6,
+    sensacion_promedio: feelings.length ? Math.round((feelings.reduce((a, b) => a + b, 0) / feelings.length) * 10) / 10 : null,
+  };
+}
+
 export async function generateWeekPlan(supabase: ServerClient, me: Me, opts: { extraInjuries?: string; recentPain?: string[] } = {}): Promise<GeneratedProgram> {
   const input = generatorInputFromMe(me, opts.extraInjuries);
   const ctx: PlacementContext = { gymDays: pickSessionDays(input.gymDays, input.allowConsecutive), events: input.events, allowConsecutive: input.allowConsecutive };
@@ -74,8 +100,10 @@ export async function generateWeekPlan(supabase: ServerClient, me: Me, opts: { e
         nombre_dia: WEEKDAY_LABELS[d].long,
         restriccion: dayRestriction(d, ctx) ?? "libre",
       }));
+      const historial = await trainingHistory(supabase, me);
       const prompt = JSON.stringify({
         perfil: profileContext(me),
+        historial,
         foco_principal: focusLabel(input.focusPrimary),
         foco_secundario: focusLabel(input.focusSecondary),
         experiencia: input.experience,
@@ -89,7 +117,7 @@ export async function generateWeekPlan(supabase: ServerClient, me: Me, opts: { e
       });
       const r = await getAI().generateJSON({
         system: ROUTINE_SYSTEM,
-        prompt: `Armá la semana. Podés mejorar la propuesta base (ya cumple las reglas).\n${prompt}`,
+        prompt: `Armá la semana. Podés mejorar la propuesta base (ya cumple las reglas). Si hay historial, tenelo en cuenta: si la adherencia fue baja, simplificá; si la sensación fue baja, bajá volumen; si los tests mejoran, mantené el enfoque.\n${prompt}`,
         schema: aiRoutineSchema,
         temperature: 0.5,
       });

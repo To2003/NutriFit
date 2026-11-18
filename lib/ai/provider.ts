@@ -43,10 +43,20 @@ async function withSlot<T>(fn: () => Promise<T>, max = 3): Promise<T> {
   }
 }
 
+/** Saca claves que algunas versiones de Gemini no aceptan; la validación estricta la hace zod después. */
+export function cleanSchema(node: unknown): unknown {
+  if (Array.isArray(node)) return node.map(cleanSchema);
+  if (!node || typeof node !== "object") return node;
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(node)) {
+    if (k === "$schema" || k === "additionalProperties" || k === "$id") continue;
+    out[k] = cleanSchema(v);
+  }
+  return out;
+}
+
 function toJsonSchema(schema: z.ZodType): unknown {
-  const js = z.toJSONSchema(schema, { target: "draft-7", unrepresentable: "any" }) as Record<string, unknown>;
-  delete js.$schema;
-  return js;
+  return cleanSchema(z.toJSONSchema(schema, { target: "draft-7", unrepresentable: "any" }));
 }
 
 function extractJson(text: string): unknown {
