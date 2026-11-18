@@ -22,7 +22,7 @@ export default async function ObjetivosOnboardingPage() {
         </Link>
       </div>
       <header className="pt-2 pb-5">
-        <h1 className="score text-[44px]">Tus objetivos</h1>
+        <h1 className="score text-[32px]">Tus objetivos</h1>
         <p className="mt-2 text-muted">Cambian según el día: más nafta cuando hay partido, menos cuando descansás.</p>
       </header>
       <GoalsBoard

@@ -55,16 +55,16 @@ export function GoalsBoard({
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.08, type: "spring", damping: 26, stiffness: 220 }}
           >
-            <Card className={cn("overflow-hidden p-0", type === "match" && "border-accent/50")}>
+            <Card className={cn("overflow-hidden p-0", type === "match" && "bg-grad border-0 text-white shadow-[0_18px_40px_-18px_rgba(109,59,255,0.65)]")}>
               <div className="flex items-center justify-between px-4 pt-3.5">
                 <p className="font-semibold">
                   {info.emoji} {info.label}
                 </p>
-                <p className="text-sm text-muted">{(auto[type]?.weekdays ?? []).map((d) => WEEKDAY_LABELS[d].short).join(", ")}</p>
+                <p className={cn("text-sm", type === "match" ? "text-white/80" : "text-muted")}>{(auto[type]?.weekdays ?? []).map((d) => WEEKDAY_LABELS[d].short).join(", ")}</p>
               </div>
               <div className="flex items-end gap-2 px-4 pt-2 pb-3">
-                <span className={cn("score text-[64px]", type === "match" ? "text-accent" : "text-text")}>{fmt(t.kcal)}</span>
-                <span className="pb-2 text-muted">kcal</span>
+                <span className={cn("score text-[44px]", type === "match" ? "text-white" : "text-text")}>{fmt(t.kcal)}</span>
+                <span className={cn("pb-2", type === "match" ? "text-white/75" : "text-muted")}>kcal</span>
               </div>
               {manual ? (
                 <div className="px-4 pb-3">
@@ -78,8 +78,7 @@ export function GoalsBoard({
                   />
                 </div>
               ) : null}
-              <div className="court-line" />
-              <dl className="grid grid-cols-4 divide-x divide-line text-center">
+              <dl className={cn("grid grid-cols-4 divide-x text-center", type === "match" ? "divide-white/15 bg-black/20" : "divide-line border-t border-line")}>
                 {[
                   { k: "Proteína", v: t.protein_g, u: "g", c: "text-protein" },
                   { k: "Carbos", v: t.carbs_g, u: "g", c: "text-carbs" },
@@ -87,10 +86,10 @@ export function GoalsBoard({
                   { k: "Agua", v: t.water_ml / 1000, u: "L", c: "text-water" },
                 ].map((m) => (
                   <div key={m.k} className="px-1 py-3">
-                    <dt className="text-xs text-muted">{m.k}</dt>
-                    <dd className={cn("score mt-1 text-2xl", m.c)}>
+                    <dt className={cn("text-xs", type === "match" ? "text-white/75" : "text-muted")}>{m.k}</dt>
+                    <dd className={cn("score mt-1 text-xl", type === "match" ? "text-white" : m.c)}>
                       {m.u === "L" ? m.v.toLocaleString("es-AR", { maximumFractionDigits: 1 }) : fmt(m.v)}
-                      <span className="ml-0.5 text-sm text-muted">{m.u}</span>
+                      <span className={cn("ml-0.5 text-sm", type === "match" ? "text-white/70" : "text-muted")}>{m.u}</span>
                     </dd>
                   </div>
                 ))}

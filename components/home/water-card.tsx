@@ -29,7 +29,7 @@ export function WaterCard({ ml, target, date }: { ml: number; target: number; da
       </Ring>
       <div className="flex-1">
         <p className="text-sm text-muted">Agua</p>
-        <p className="score text-4xl">
+        <p className="score text-[30px]">
           {fmt1(optimistic / 1000)}
           <span className="font-sans text-base font-normal text-muted"> / {fmt1(target / 1000)} L</span>
         </p>

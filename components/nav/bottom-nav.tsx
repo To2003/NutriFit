@@ -26,7 +26,7 @@ export function BottomNav() {
         aria-current={active ? "page" : undefined}
         className={cn("relative flex flex-1 flex-col items-center gap-0.5 pt-2.5 pb-1 text-[11px] font-semibold", active ? "text-text" : "text-muted")}
       >
-        {active ? <motion.span layoutId="nav-dot" className="absolute top-0 h-[3px] w-8 rounded-b-full bg-accent" /> : null}
+        {active ? <motion.span layoutId="nav-dot" className="bg-grad absolute top-0 h-[3px] w-8 rounded-b-full" /> : null}
         <it.Icon className="size-[22px]" strokeWidth={active ? 2.4 : 1.8} />
         {it.label}
       </Link>
@@ -36,7 +36,7 @@ export function BottomNav() {
     <>
       <nav
         aria-label="Principal"
-        className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-bg/92 pb-[var(--safe-bottom)] backdrop-blur-md"
+        className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-bg/85 pb-[var(--safe-bottom)] backdrop-blur-xl"
       >
         <div className="mx-auto flex max-w-lg items-stretch px-2">
           {items.slice(0, 2).map(link)}
@@ -49,7 +49,7 @@ export function BottomNav() {
                 vibrate(10);
                 setOpen(true);
               }}
-              className="-mt-5 grid size-[60px] place-items-center rounded-[20px] bg-accent text-accent-ink shadow-[0_8px_24px_-8px_rgba(198,255,61,0.55)] transition-transform active:scale-95"
+              className="bg-grad -mt-5 grid size-[60px] place-items-center rounded-full text-white shadow-[0_10px_28px_-6px_rgba(176,75,214,0.8)] ring-4 ring-bg transition-transform active:scale-95"
             >
               <Plus className="size-7" strokeWidth={2.6} />
             </button>

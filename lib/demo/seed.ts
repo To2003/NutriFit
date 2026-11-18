@@ -200,7 +200,8 @@ async function seed() {
     T.programs.push({ id: pid, user_id: user, name, focus_primary: "jump", focus_secondary: "injury_prevention", start_date: startDate, weeks: 4, status: "active", source: "rules", copied_from: null, notes: "Lo pesado va el miércoles, lejos de los partidos. Lunes y viernes, activación y prevención: hombro para el remate, tobillo y aductores para el hockey.", created_at: now });
     const mains = new Set(plan.sessions.flatMap((s) => s.exercises.filter((e) => ["squat", "hinge", "horizontal_push", "horizontal_pull", "vertical_pull"].includes(LIBRARY_BY_ID[e.exerciseId].pattern)).map((e) => e.exerciseId)));
     const ids: Record<string, string> = {};
-    for (const w of expandMesocycle(plan, { mainExerciseIds: mains })) {
+    const light = new Set(user === DEMO_USER ? [1, 5] : []);
+    for (const w of expandMesocycle(plan, { mainExerciseIds: mains, lightWeekdays: light })) {
       for (const s of w.sessions) {
         const sid = crypto.randomUUID();
         ids[`${w.week}-${s.weekday}`] = sid;

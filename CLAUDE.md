@@ -53,18 +53,20 @@ pnpm db:seeds     # regenera supabase/seed/*.sql desde lib/training/library-data
 | D3 | Carbohidratos | **Piso de 3 g/kg en días de entreno/partido.** Si no entra: 1) bajar grasa hasta el mínimo del 20 % de las kcal, 2) achicar el déficit de ese día. En los días de descanso no hay piso. |
 | D4 | Agenda | Se puede editar en cualquier momento (vacaciones, cambios de equipo). Al editarla, se ofrece volver a generar la rutina. El override de un solo día sigue en la fase 2. |
 | D5 | Días de gym | Por defecto queda **≥1 día de descanso entre sesiones de gym**. Hay una opción por usuario, "permitir días seguidos". El gym **puede** caer el mismo día que el deporte, y MD-1/MD+1 se mantienen. |
-| D6 | Diseño | Dirección "Cancha nocturna" (ver abajo). Animación "expresiva con propósito". |
+| D6 | Diseño | Dirección **"Deportivo vibrante"** (ver abajo; reemplaza a "Cancha nocturna" el 18/11). Animación "expresiva con propósito". |
 | D7 | Agente | Personaje con nombre, **"el Profe"**: monograma propio que firma los mensajes. |
 
-## Diseño — "Cancha nocturna"
-- Tokens (CSS vars, modo oscuro por defecto):
-  - `--bg #0B0D0C` · `--surface #151917` · `--surface-2 #1D2320` · `--border #2A312D`
-  - `--accent #C6FF3D` (lima) · `--alert #FF6B3D` (naranja pelota) · `--water #3DD6FF`
-  - Macros: proteína `#C6FF3D`, carbos `#FFC93D`, grasa `#FF6B3D` (a validar en contraste)
-- Tipografía: **Big Shoulders Display** para números y títulos (tipo marcador) y **Manrope** para el texto. Números con `tabular-nums`.
+## Diseño — "Deportivo vibrante"
+- Tokens (CSS vars en `app/globals.css`, modo oscuro por defecto):
+  - `--bg #0E0B1A` (violeta noche) · `--surface #17122A` · `--surface-2 #211A3A` · `--line #2F2752`
+  - Degradé de marca `--grad`: `#6D3BFF → #B04BD6 → #FF7A45` (clases `bg-grad`, `bg-grad-soft`, `text-grad`)
+  - `--accent #FFD84D` (amarillo: botones principales y selección) · `--alert #FF5C7A` · `--water #4FD1FF`
+  - Macros: proteína `#A98BFF`, carbos `#FFD84D`, grasa `#FF8A5C`
+- Tipografía: **Plus Jakarta Sans** para todo (números y títulos en 800 con tracking negativo, clase `.score`, `tabular-nums`).
+- La tarjeta protagonista (marcador del día, día de partido) va con el degradé. Botones redondeados (pill). El Profe firma con un monograma en degradé.
 - Mobile-first a 375 px. Targets ≥ 44 px. Cargar cualquier cosa en ≤ 3 toques.
-- Motion: anillos que se llenan, contadores, transiciones entre pantallas, sheet del "+" con resorte, celebración en PRs y rachas, `navigator.vibrate` en Android. Siempre se respeta `prefers-reduced-motion`.
-- Copy: rioplatense, con "vos", humor. Nunca culpabilizar ni comentar el cuerpo.
+- Motion: anillos, contadores, sheet del "+" con resorte, chips flotando en el login, celebración en PRs. Siempre se respeta `prefers-reduced-motion`.
+- Copy: rioplatense, con "vos", humor. Nunca culpabilizar ni comentar el cuerpo. Poco texto por pantalla.
 
 ## Convenciones
 - TypeScript `strict`. Nada de `any` salvo en los bordes, y con un comentario.
@@ -111,7 +113,8 @@ tests/rls/
 - Tablas hijas (`food_log_items`, `program_sessions`, `program_exercises`, `set_logs`) llevan `user_id` + FK compuesta (parent_id, user_id): RLS simple y no se puede colgar nada en datos de otro.
 - `follows.status` lo decide un trigger según la privacidad del seguido (el cliente no puede autoaceptarse). Bloquear borra follows.
 - La IA de rutinas recibe la biblioteca filtrada (equipamiento, nivel, molestias) + un plan base por reglas; elige por id. Si el plan IA no pasa el validador después de `fixPlan`, se usa el de reglas.
-- Días livianos (MD±1): ≤ 2 series y RIR ≥ 3.
+- Días livianos (MD±1): ≤ 2 series y RIR ≥ 3, y no se progresan en el mesociclo. Lo que no tiene RIR (movilidad, saltos) sigue sin RIR; accesorios/prevención con RIR base ≥ 3 no bajan de RIR 2.
+- Modo demo (`pnpm demo`): backend en memoria (`lib/demo/*`) con la API del query builder; sin RLS, sin IA. Solo para ver/probar sin Supabase.
 - Feedback por agua y peso: por reglas (sin IA) para no gastar cuota.
 - Tope blando de 80 llamadas IA por usuario por día (`ai_usage` + `bump_ai_usage`).
 - Guardrail: se prohíbe "ayuno/ayunar", no "en ayunas" (pesarse).

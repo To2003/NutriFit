@@ -70,7 +70,7 @@ export default async function PublicProfilePage({ params }: PageProps<"/perfil/[
       <header className="flex items-center gap-4 px-1">
         <Avatar src={p.avatar_url} name={p.display_name || p.username} size={76} />
         <div className="min-w-0 flex-1">
-          <p className="score truncate text-[30px] leading-none">{p.display_name || p.username}</p>
+          <p className="score truncate text-[24px] leading-none">{p.display_name || p.username}</p>
           <div className="mt-1.5 flex gap-4 text-sm">
             <span>
               <span className="font-bold">{followers.count ?? 0}</span> <span className="text-muted">seguidores</span>
@@ -124,7 +124,7 @@ export default async function PublicProfilePage({ params }: PageProps<"/perfil/[
               return (
                 <div key={k} className="rounded-[14px] bg-surface-2 py-2.5">
                   <p>{e}</p>
-                  <p className="score text-3xl">{s?.current ?? 0}</p>
+                  <p className="score text-2xl">{s?.current ?? 0}</p>
                   <p className="text-[11px] text-muted">{l}</p>
                 </div>
               );
@@ -172,7 +172,7 @@ export default async function PublicProfilePage({ params }: PageProps<"/perfil/[
             {[...latestTests.entries()].map(([k, t]) => (
               <div key={k} className="rounded-[14px] bg-surface-2 p-3">
                 <p className="text-xs text-muted">{TEST_INFO[k as keyof typeof TEST_INFO]?.label ?? k}</p>
-                <p className="score text-3xl">
+                <p className="score text-2xl">
                   {fmt1(t.value)} <span className="font-sans text-sm font-normal text-muted">{t.unit}</span>
                 </p>
               </div>

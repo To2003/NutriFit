@@ -83,7 +83,7 @@ export function ProgramView({
                   {isToday ? " · hoy" : ""}
                   {done ? " · hecha ✓" : ""}
                 </p>
-                <h3 className="score text-3xl">{s.name}</h3>
+                <h3 className="score text-2xl">{s.name}</h3>
               </div>
               {week === currentWeek && !done ? (
                 <Button asChild size="sm" variant={isToday ? "primary" : "secondary"}>

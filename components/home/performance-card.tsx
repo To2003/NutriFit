@@ -22,7 +22,7 @@ export async function PerformanceCard({ me }: { me: Me }) {
       <div className="grid grid-cols-2 gap-2">
         <div className="rounded-[14px] bg-surface-2 p-3">
           <p className="text-xs text-muted">Volumen semanal</p>
-          <p className="score text-3xl">
+          <p className="score text-2xl">
             {fmt(thisWeek)}
             <span className="font-sans text-sm font-normal text-muted"> kg</span>
           </p>
@@ -30,7 +30,7 @@ export async function PerformanceCard({ me }: { me: Me }) {
         </div>
         <div className="rounded-[14px] bg-surface-2 p-3">
           <p className="text-xs text-muted">Salto (CMJ)</p>
-          <p className="score text-3xl">
+          <p className="score text-2xl">
             {cmj ? fmt1(Number(cmj.value)) : "—"}
             <span className="font-sans text-sm font-normal text-muted"> cm</span>
           </p>

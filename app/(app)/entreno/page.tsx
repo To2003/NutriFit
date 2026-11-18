@@ -50,7 +50,7 @@ export default async function EntrenoPage() {
       <header className="flex items-end justify-between gap-3 px-1">
         <div>
           <p className="text-sm text-muted">{ap ? `Semana ${ap.currentWeek} de ${ap.program.weeks}` : "Tu mesociclo"}</p>
-          <h1 className="score text-[40px] leading-none">{ap ? ap.program.name : "Entreno"}</h1>
+          <h1 className="score text-[30px] leading-none">{ap ? ap.program.name : "Entreno"}</h1>
         </div>
         {ap ? <GenerateButton hasProgram /> : null}
       </header>

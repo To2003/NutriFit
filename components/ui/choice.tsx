@@ -198,7 +198,7 @@ export function Stepper({
           inputMode="decimal"
           value={Number.isFinite(value) ? value : ""}
           onChange={(e) => set(Number(e.target.value))}
-          className="score w-full bg-transparent text-center text-3xl outline-none"
+          className="score w-full bg-transparent text-center text-2xl outline-none"
         />
         {suffix ? <span className="text-sm text-muted">{suffix}</span> : null}
       </label>

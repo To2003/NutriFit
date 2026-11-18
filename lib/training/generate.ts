@@ -153,7 +153,13 @@ export async function saveProgram(
       s.exercises.filter((e) => ["squat", "hinge", "horizontal_push", "horizontal_pull", "vertical_pull", "vertical_push"].includes(LIBRARY_BY_ID[e.exerciseId]?.pattern ?? "")).map((e) => e.exerciseId),
     ),
   );
-  const weeks = expandMesocycle(gen.plan, { mainExerciseIds: mains });
+  const ctxP: PlacementContext = {
+    gymDays: gen.plan.sessions.map((x) => x.weekday),
+    events: me.schedule.map((x) => ({ weekday: x.weekday, sport: x.sport, kind: x.kind as "training" | "match", durationMin: x.duration_min })),
+    allowConsecutive: true,
+  };
+  const lightWeekdays = new Set(gen.plan.sessions.map((x) => x.weekday).filter((d) => dayRestriction(d, ctxP) !== null));
+  const weeks = expandMesocycle(gen.plan, { mainExerciseIds: mains, lightWeekdays });
   await supabase.from("programs").update({ status: "archived" }).eq("user_id", me.userId).eq("status", "active");
   const prog = await supabase
     .from("programs")

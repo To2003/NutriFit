@@ -52,7 +52,7 @@ export default async function InicioPage() {
     <main className="space-y-3 px-4 pt-[max(18px,env(safe-area-inset-top))]">
       <header className="px-1 pb-1">
         <p className="text-sm text-muted first-letter:uppercase">{formatDayLong(me.today)}</p>
-        <h1 className="score text-[40px]">
+        <h1 className="score text-[30px]">
           {greet}
           {me.profile.display_name ? `, ${me.profile.display_name.split(" ")[0]}` : ""}
         </h1>
@@ -94,7 +94,7 @@ export default async function InicioPage() {
         canGenerate={!review.data && (isoWeekday(me.today) === 7 || isoWeekday(me.today) === 1) && reviewedWs <= me.today}
       />
 
-      {msgText ? <AgentCard text={msgText} /> : <AgentCard text="Cargá tu primera comida y te tiro una mano. Sin retos, prometido." />}
+      {close.data ? null : msgText ? <AgentCard text={msgText} /> : <AgentCard text="Cargá tu primera comida y te tiro una mano. Sin retos, prometido." />}
     </main>
   );
 }

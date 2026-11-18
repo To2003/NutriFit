@@ -8,7 +8,7 @@ export function BackHeader({ title, href = "/perfil", subtitle }: { title: strin
         <ChevronLeft className="size-6" />
       </Link>
       <div>
-        <h1 className="score text-[34px] leading-none">{title}</h1>
+        <h1 className="score text-[26px] leading-none">{title}</h1>
         {subtitle ? <p className="text-sm text-muted">{subtitle}</p> : null}
       </div>
     </header>

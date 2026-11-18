@@ -25,7 +25,7 @@ export default async function PerfilPage() {
       <header className="flex items-center gap-4 px-1">
         <Avatar src={p.avatar_url} name={p.display_name || p.username} size={76} />
         <div className="min-w-0 flex-1">
-          <h1 className="score truncate text-[34px] leading-none">{p.display_name || p.username}</h1>
+          <h1 className="score truncate text-[26px] leading-none">{p.display_name || p.username}</h1>
           <p className="text-muted">
             @{p.username} {p.is_private ? <Lock className="inline size-3.5" aria-label="Cuenta privada" /> : null}
           </p>

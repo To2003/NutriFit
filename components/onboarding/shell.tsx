@@ -102,7 +102,7 @@ export function StepShell({
         className="flex flex-1 flex-col"
       >
         <header className="pt-4 pb-6">
-          <h1 className="score text-[44px] text-text">{STEP_TITLES[step as StepNumber]}</h1>
+          <h1 className="score text-[32px] text-text">{STEP_TITLES[step as StepNumber]}</h1>
           {subtitle ? <p className="mt-2 text-muted">{subtitle}</p> : null}
         </header>
         <form

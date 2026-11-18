@@ -20,7 +20,7 @@ export async function StreaksCard({ userId }: { userId: string }) {
         {items.map((it) => (
           <div key={it.label} className="rounded-[14px] bg-surface-2 px-1 py-2.5">
             <p className="text-lg leading-none">{it.emoji}</p>
-            <p className={`score mt-1 text-3xl ${it.v.current > 0 ? "text-accent" : "text-muted"}`}>{it.v.current}</p>
+            <p className={`score mt-1 text-2xl ${it.v.current > 0 ? "text-accent" : "text-muted"}`}>{it.v.current}</p>
             <p className="text-[11px] text-muted">{it.label}</p>
             <p className="text-[10px] text-muted">mejor {it.v.best}</p>
           </div>

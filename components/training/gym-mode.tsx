@@ -127,7 +127,7 @@ export function GymMode({ programSessionId, title, exercises }: { programSession
     return (
       <main className="mx-auto max-w-lg space-y-4 px-5 pt-[max(24px,env(safe-area-inset-top))] pb-10">
         <Celebrate show={summary.prs.length > 0} />
-        <h1 className="score text-[52px] leading-none">Sesión adentro</h1>
+        <h1 className="score text-[38px] leading-none">Sesión adentro</h1>
         <div className="grid grid-cols-2 gap-2">
           <Stat label="Duración" value={`${summary.durationMin} min`} />
           <Stat label="Volumen" value={`${fmt(summary.volumeKg)} kg`} />
@@ -163,7 +163,7 @@ export function GymMode({ programSessionId, title, exercises }: { programSession
           <p className="text-xs text-muted">
             {doneSets}/{totalSets} series · {mmss(Math.floor((now - startedAt) / 1000))}
           </p>
-          <h1 className="score text-2xl leading-none">{title}</h1>
+          <h1 className="score text-xl leading-none">{title}</h1>
         </div>
         <Button size="sm" onClick={() => setFinishing(true)} disabled={!workoutId}>
           Terminar
@@ -281,7 +281,7 @@ export function GymMode({ programSessionId, title, exercises }: { programSession
                   <div className="h-full bg-water transition-[width] duration-500" style={{ width: `${Math.max(0, (restLeft / rest.total) * 100)}%` }} />
                 </div>
               </div>
-              <span className="score w-16 text-right text-3xl" aria-live="polite">
+              <span className="score w-16 text-right text-2xl" aria-live="polite">
                 {mmss(Math.max(0, restLeft))}
               </span>
               <button type="button" aria-label="Saltear descanso" onClick={() => setRest(null)} className="grid size-10 place-items-center rounded-full text-muted">
@@ -324,7 +324,7 @@ function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-[18px] border border-line bg-surface p-4">
       <p className="text-sm text-muted">{label}</p>
-      <p className="score text-4xl">{value}</p>
+      <p className="score text-[30px]">{value}</p>
     </div>
   );
 }
@@ -377,7 +377,7 @@ function PainSheet({ ex, workoutId, onClose }: { ex: GymExercise | null; workout
         <div>
           <p className="mb-2 flex justify-between text-sm">
             <span className="text-muted">Intensidad</span>
-            <span className="score text-2xl">{intensity}/10</span>
+            <span className="score text-xl">{intensity}/10</span>
           </p>
           <input type="range" min={1} max={10} value={intensity} onChange={(e) => setIntensity(Number(e.target.value))} className="w-full accent-[var(--alert)]" aria-label="Intensidad del dolor" />
         </div>
@@ -428,7 +428,7 @@ function FinishSheet({
               type="button"
               aria-pressed={feeling === n}
               onClick={() => setFeeling(n)}
-              className={cn("score h-12 rounded-[12px] border text-2xl", feeling === n ? "border-accent bg-accent text-accent-ink" : "border-line bg-surface-2")}
+              className={cn("score h-12 rounded-[12px] border text-xl", feeling === n ? "border-accent bg-accent text-accent-ink" : "border-line bg-surface-2")}
             >
               {n}
             </button>

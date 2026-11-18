@@ -43,7 +43,7 @@ export function WeightChart({ weights, today }: { weights: { date: string; kg: n
     <div>
       <div className="mb-2 flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="score text-4xl whitespace-nowrap">
+          <p className="score text-[30px] whitespace-nowrap">
             {last ? fmt1(last.trend) : "—"}
             <span className="font-sans text-sm font-normal text-muted"> kg</span>
           </p>

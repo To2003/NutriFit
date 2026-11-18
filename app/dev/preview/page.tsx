@@ -80,7 +80,7 @@ export default async function Preview({ searchParams }: PageProps<"/dev/preview"
           <>
             <header className="px-1 pb-1">
               <p className="text-sm text-muted">Sábado 21 de noviembre</p>
-              <h1 className="score text-[40px]">Buenas tardes, Toto</h1>
+              <h1 className="score text-[30px]">Buenas tardes, Toto</h1>
             </header>
             <Scoreboard dayType="match" kcal={1840} target={auto.match!.kcal} protein={[118, auto.match!.protein_g]} carbs={[210, auto.match!.carbs_g]} fat={[52, auto.match!.fat_g]} />
             <WaterCard ml={1750} target={auto.match!.water_ml} date={today} />

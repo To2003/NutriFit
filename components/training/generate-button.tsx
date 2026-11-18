@@ -25,7 +25,7 @@ export function GenerateButton({ hasProgram }: { hasProgram: boolean }) {
     <>
       <Button block={!hasProgram} size={hasProgram ? "sm" : "lg"} variant={hasProgram ? "outline" : "primary"} disabled={pending} onClick={() => (hasProgram ? setConfirm(true) : run())}>
         {pending ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />}
-        {pending ? "Armando tu mesociclo…" : hasProgram ? "Rehacer rutina" : "Armar mi rutina"}
+        {pending ? "Armando tu mesociclo…" : hasProgram ? "Rehacer" : "Armar mi rutina"}
       </Button>
       <Sheet open={confirm} onOpenChange={setConfirm} title="¿Rehacer la rutina?" description="Se archiva la actual (tus registros quedan) y arrancás un mesociclo nuevo desde esta semana.">
         <div className="flex gap-2 pb-2">

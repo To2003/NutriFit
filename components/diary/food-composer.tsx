@@ -257,7 +257,7 @@ function ComposerBody({
             </button>
             <div className="sticky bottom-0 mt-auto -mx-5 border-t border-line bg-surface px-5 pt-3">
               <div className="mb-3 flex items-baseline justify-between">
-                <span className="score text-4xl">
+                <span className="score text-[30px]">
                   {fmt(totals.kcal)} <span className="font-sans text-sm font-normal text-muted">kcal</span>
                 </span>
                 <span className="tnum text-sm text-muted">

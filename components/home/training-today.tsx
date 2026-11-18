@@ -34,7 +34,7 @@ export async function TrainingToday({ me }: { me: Me }) {
   const names = n.session.program_exercises.slice(0, 4).map((e) => LIBRARY_BY_ID[e.exercise_id]?.name ?? e.exercise_id);
   return (
     <Section title={n.isToday ? "Entreno de hoy" : `Próxima sesión · ${WEEKDAY_LABELS[n.session.weekday].long}`} href="/entreno" linkLabel="Rutina">
-      <p className="score text-3xl">{n.session.name}</p>
+      <p className="score text-2xl">{n.session.name}</p>
       <p className="mt-1 text-sm text-muted">
         {names.join(" · ")}
         {n.session.program_exercises.length > 4 ? ` y ${n.session.program_exercises.length - 4} más` : ""}

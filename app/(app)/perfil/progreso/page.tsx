@@ -44,7 +44,7 @@ export default async function ProgresoPage() {
               return (
                 <div key={k} className="rounded-[12px] bg-surface-2 p-2.5">
                   <dt className="text-xs text-muted">{l}</dt>
-                  <dd className="score text-2xl">{fmt1(Number(v))}</dd>
+                  <dd className="score text-xl">{fmt1(Number(v))}</dd>
                   {d != null && d !== 0 ? <dd className="text-xs text-muted">{d > 0 ? "+" : ""}{fmt1(d)} cm</dd> : null}
                 </div>
               );

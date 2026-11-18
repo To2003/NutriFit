@@ -1,11 +1,10 @@
 import type { Metadata, Viewport } from "next";
-import { Big_Shoulders, Manrope } from "next/font/google";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import { Toaster } from "sonner";
 import { ServiceWorkerRegister } from "@/components/pwa/sw-register";
 import "./globals.css";
 
-const manrope = Manrope({ subsets: ["latin"], variable: "--font-manrope", display: "swap" });
-const score = Big_Shoulders({ subsets: ["latin"], variable: "--font-score", weight: ["600", "800", "900"], display: "swap" });
+const jakarta = Plus_Jakarta_Sans({ subsets: ["latin"], variable: "--font-jakarta", weight: ["400", "500", "600", "700", "800"], display: "swap" });
 
 export const metadata: Metadata = {
   title: { default: "NutriFit", template: "%s · NutriFit" },
@@ -20,7 +19,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0b0d0c",
+  themeColor: "#0e0b1a",
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
@@ -29,8 +28,8 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="es-AR" className={`${manrope.variable} ${score.variable}`}>
-      <body className="min-h-dvh antialiased">
+    <html lang="es-AR" className={jakarta.variable}>
+      <body className="glow-bg min-h-dvh bg-fixed antialiased">
         {children}
         <Toaster
           theme="dark"

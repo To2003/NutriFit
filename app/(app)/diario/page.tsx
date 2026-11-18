@@ -44,7 +44,7 @@ export default async function DiarioPage({ searchParams }: PageProps<"/diario">)
         </Link>
         <div className="flex-1 text-center">
           <p className="text-sm text-muted first-letter:uppercase">{isToday ? "Hoy" : formatDayLong(date)}</p>
-          <h1 className="score text-3xl leading-none">{t ? `${DAY_TYPE_INFO[t.dayType].label} ${DAY_TYPE_INFO[t.dayType].emoji}` : "Diario"}</h1>
+          <h1 className="score text-2xl leading-none">{t ? `${DAY_TYPE_INFO[t.dayType].label} ${DAY_TYPE_INFO[t.dayType].emoji}` : "Diario"}</h1>
         </div>
         {isToday ? (
           <span className="size-11" />
@@ -58,7 +58,7 @@ export default async function DiarioPage({ searchParams }: PageProps<"/diario">)
       {t ? (
         <section className="rounded-[20px] border border-line bg-surface p-4">
           <div className="mb-3 flex items-baseline justify-between">
-            <p className="score text-4xl">
+            <p className="score text-[30px]">
               {fmt(day.totals.kcal)}
               <span className="font-sans text-base font-normal text-muted"> / {fmt(t.kcal)} kcal</span>
             </p>

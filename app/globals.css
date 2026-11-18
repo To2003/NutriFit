@@ -2,20 +2,25 @@
 
 /* ── NutriFit · "Cancha nocturna" ─────────────────────────────────────────── */
 :root {
-  --bg: #0b0d0c;
-  --surface: #151917;
-  --surface-2: #1d2320;
-  --line: #2a312d;
-  --text: #eef2ec;
-  --muted: #8e978f;
-  --accent: #c6ff3d;
-  --accent-ink: #11160a;
-  --alert: #ff6b3d;
-  --water: #3dd6ff;
-  --carbs: #ffc93d;
-  --protein: #c6ff3d;
-  --fat: #ff8f6b;
-  --ok: #6ee7a8;
+  /* "Deportivo vibrante": violeta noche + degradé violeta→naranja + amarillo */
+  --bg: #0e0b1a;
+  --surface: #17122a;
+  --surface-2: #211a3a;
+  --line: #2f2752;
+  --text: #f4f1ff;
+  --muted: #a8a0c8;
+  --accent: #ffd84d;
+  --accent-ink: #1c1500;
+  --violet: #6d3bff;
+  --orange: #ff7a45;
+  --alert: #ff5c7a;
+  --water: #4fd1ff;
+  --carbs: #ffd84d;
+  --protein: #a98bff;
+  --fat: #ff8a5c;
+  --ok: #5ee0a0;
+  --grad: linear-gradient(135deg, #6d3bff 0%, #b04bd6 48%, #ff7a45 100%);
+  --grad-soft: linear-gradient(135deg, rgba(109, 59, 255, 0.22), rgba(255, 122, 69, 0.18));
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   color-scheme: dark;
 }
@@ -35,8 +40,10 @@
   --color-protein: var(--protein);
   --color-fat: var(--fat);
   --color-ok: var(--ok);
-  --font-sans: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
-  --font-score: var(--font-score), "Arial Narrow", sans-serif;
+  --color-violet: var(--violet);
+  --color-orange: var(--orange);
+  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+  --font-score: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
   --radius-chip: 10px;
   --radius-card: 18px;
   --radius-sheet: 28px;
@@ -58,13 +65,35 @@ body {
   overscroll-behavior-y: none;
 }
 
-/* Números de marcador */
+/* Números y títulos grandes */
 .score {
   font-family: var(--font-score);
   font-variant-numeric: tabular-nums;
   font-weight: 800;
-  letter-spacing: 0.01em;
-  line-height: 0.9;
+  letter-spacing: -0.035em;
+  line-height: 1;
+}
+
+/* Superficies con el degradé de marca */
+.bg-grad {
+  background: var(--grad);
+}
+.bg-grad-soft {
+  background: var(--grad-soft);
+}
+.text-grad {
+  background: var(--grad);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Brillos de fondo (sutiles, fijos) */
+.glow-bg {
+  background:
+    radial-gradient(60% 40% at 15% 0%, rgba(109, 59, 255, 0.22), transparent 70%),
+    radial-gradient(50% 35% at 100% 10%, rgba(255, 122, 69, 0.14), transparent 70%),
+    var(--bg);
 }
 
 .tnum {
@@ -73,6 +102,7 @@ body {
 
 /* Línea de cancha: separador con la marca central */
 .court-line {
+  /* separador con marca central */
   position: relative;
   height: 1px;
   background: var(--line);
@@ -86,7 +116,7 @@ body {
   height: 7px;
   border-radius: 999px;
   transform: translateX(-50%);
-  background: var(--bg);
+  background: var(--surface);
   border: 1px solid var(--line);
 }
 

@@ -63,6 +63,23 @@ describe("expandMesocycle", () => {
     expect(r.map((w) => w.sessions[0].exercises[0].sets)).toEqual([3, 3, 4, 2]);
     expect(r[2].sessions[0].exercises[1].sets).toBe(2);
   });
+  it("lo que no tiene RIR (movilidad, saltos) sigue sin RIR", () => {
+    const w: WeekPlan = { sessions: [{ weekday: 1, name: "A", exercises: [{ exerciseId: "mob", sets: 2, repsMin: 6, repsMax: 10, restS: 30, rir: null, notes: "" }] }] };
+    expect(expandMesocycle(w, { mainExerciseIds: new Set() }).map((x) => x.sessions[0].exercises[0].rir)).toEqual([null, null, null, null]);
+  });
+
+  it("días livianos (MD±1) no se endurecen con las semanas", () => {
+    const w: WeekPlan = { sessions: [{ weekday: 5, name: "Liviano", exercises: [{ exerciseId: "row", sets: 2, repsMin: 8, repsMax: 12, restS: 90, rir: 3, notes: "" }] }] };
+    const r = expandMesocycle(w, { mainExerciseIds: new Set(["row"]), lightWeekdays: new Set([5]) });
+    expect(r.slice(0, 3).map((x) => x.sessions[0].exercises[0].rir)).toEqual([3, 3, 3]);
+    expect(r.slice(0, 3).map((x) => x.sessions[0].exercises[0].sets)).toEqual([2, 2, 2]);
+  });
+
+  it("ejercicios de prevención (RIR base ≥ 3) no bajan de RIR 2", () => {
+    const w: WeekPlan = { sessions: [{ weekday: 3, name: "A", exercises: [{ exerciseId: "face", sets: 2, repsMin: 8, repsMax: 12, restS: 60, rir: 3, notes: "" }] }] };
+    expect(expandMesocycle(w, { mainExerciseIds: new Set() }).slice(0, 3).map((x) => x.sessions[0].exercises[0].rir)).toEqual([3, 2, 2]);
+  });
+
   it("descarga: ~60 % de las series, mínimo 1", () => {
     expect(r[3].sessions[0].exercises[1].sets).toBe(1);
   });
