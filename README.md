@@ -47,6 +47,9 @@ pnpm demo   # http://localhost:3000 — entrás como "Toto" con una semana de da
 ```
 Todo corre en memoria (se borra al reiniciar), sin IA (usa los fallbacks) y sin RLS. Sirve para ver y probar las pantallas antes de tener Supabase. Capturas en `docs/capturas/`.
 
+### Video tutorial
+`bash scripts/tutorial/build.sh` (con `pnpm demo` corriendo) graba el recorrido en el modo demo y arma un video de 1080×1920 con títulos, música lo-fi generada y sonidos de toques, todo libre de derechos.
+
 ### Desarrollo local
 ```bash
 cp .env.example .env.local   # completar
