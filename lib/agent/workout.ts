@@ -30,6 +30,7 @@ export function fallbackWorkoutFeedback(s: WorkoutSummary): string {
 export async function workoutFeedback(supabase: ServerClient, userId: string, date: string, s: WorkoutSummary, ref: string): Promise<string> {
   const out = await runAI({
     supabase,
+    userId: userId,
     enabled: serverEnv().geminiRich,
     call: async () => {
       const r = await getAI().generateJSON({

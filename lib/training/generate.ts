@@ -94,6 +94,7 @@ export async function generateWeekPlan(supabase: ServerClient, me: Me, opts: { e
 
   const out = await runAI<GeneratedProgram>({
     supabase,
+    userId: me.userId,
     call: async () => {
       const days = ctx.gymDays.map((d) => ({
         dia: d,

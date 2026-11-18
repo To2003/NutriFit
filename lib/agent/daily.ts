@@ -50,6 +50,7 @@ export async function generateDailyClose(supabase: ServerClient, me: Me, date: s
 
   const out = await runAI({
     supabase,
+    userId: me.userId,
     // El cupo gratis es chico: el cierre sale de las reglas salvo GEMINI_RICH=1
     enabled: serverEnv().geminiRich,
     call: async () => {

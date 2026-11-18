@@ -132,6 +132,7 @@ export async function generateWeeklyReview(supabase: ServerClient, me: Me): Prom
 
   const out = await runAI({
     supabase,
+    userId: me.userId,
     call: async () => {
       const r = await getAI().generateJSON({
         system: `${PROFE_PERSONA}

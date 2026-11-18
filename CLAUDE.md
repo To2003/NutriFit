@@ -120,7 +120,7 @@ tests/rls/
   - tareas de calidad (comida texto/foto, ¿Qué como?, rutina, revisión semanal) prueban primero Gemini; tareas frecuentes (feedback por carga, cierre del día, feedback de sesión) usan `prefer: "volume"` → Gemma primero;
   - Gemma no acepta systemInstruction, modo JSON ni thinkingLevel: se mandan instrucciones + JSON Schema en el prompt y zod valida igual;
   - `GEMINI_RICH`: por defecto activo si hay Gemma en la cadena; `0` apaga la IA en tareas frecuentes;
-  - tope blando de 15 llamadas por usuario por día (`ai_usage` + `bump_ai_usage`).
+  - topes: `AI_DAILY_CAP_PER_USER` (25), `AI_MONTHLY_CAP_PER_USER` (400) y `AI_DAILY_CAP_GLOBAL` (400), contados en la base con `consume_ai_quota()` (security definer; crons cuentan a nombre del usuario). Excepciones por usuario en `ai_limits` (solo editable por SQL Editor/service role). El usuario no puede modificar `ai_usage`. Al pasar un tope → fallback por reglas con aviso.
 - Guardrail: se prohíbe "ayuno/ayunar", no "en ayunas" (pesarse).
 - Ingesta baja: si ≥ 3 días completos < 80 % del piso calórico, el Profe no felicita y sugiere ver a un profesional.
 - Avatar propio: data URL de 256 px en `profiles.avatar_url` (evita un bucket público).

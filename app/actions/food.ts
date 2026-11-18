@@ -12,6 +12,9 @@ import { draftsFromAI, draftsFromText } from "@/lib/food/draft";
 import { recentAndFrequent, searchExternal, searchLocal } from "@/lib/food/search";
 import type { DraftItem, FoodRow } from "@/lib/food/types";
 import { feedbackAfterLog } from "@/lib/agent/feedback";
+import { QUOTA_COPY, type QuotaBlock } from "@/lib/ai/quota";
+
+const quotaNotice = (reason?: string) => (reason && reason in QUOTA_COPY ? QUOTA_COPY[reason as QuotaBlock] : null);
 
 type Fail = { ok: false; error: string };
 
@@ -37,7 +40,7 @@ export async function foodShortcutsAction(): Promise<{ recent: FoodRow[]; freque
 
 export async function analyzeFoodTextAction(
   text: string,
-): Promise<{ ok: true; items: DraftItem[]; source: "ai" | "fallback"; missing: string[] } | Fail> {
+): Promise<{ ok: true; items: DraftItem[]; source: "ai" | "fallback"; missing: string[]; notice: string | null } | Fail> {
   const userId = await getUserId();
   if (!userId) return { ok: false, error: "Se cortó la sesión" };
   const input = text.trim().slice(0, 500);
@@ -52,14 +55,14 @@ export async function analyzeFoodTextAction(
     },
     fallback: () => draftsFromText(supabase, input),
   });
-  return { ok: true, items: out.data.items, missing: out.data.missing, source: out.source };
+  return { ok: true, items: out.data.items, missing: out.data.missing, source: out.source, notice: quotaNotice(out.reason) };
 }
 
 const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
 
 export async function analyzeFoodPhotoAction(
   form: FormData,
-): Promise<{ ok: true; items: DraftItem[]; source: "ai" | "fallback"; photoPath: string | null } | Fail> {
+): Promise<{ ok: true; items: DraftItem[]; source: "ai" | "fallback"; photoPath: string | null; notice: string | null } | Fail> {
   const userId = await getUserId();
   if (!userId) return { ok: false, error: "Se cortó la sesión" };
   const file = form.get("photo");
@@ -88,7 +91,7 @@ export async function analyzeFoodPhotoAction(
     },
     fallback: () => [] as DraftItem[],
   });
-  return { ok: true, items: out.data, source: out.source, photoPath };
+  return { ok: true, items: out.data, source: out.source, photoPath, notice: quotaNotice(out.reason) };
 }
 
 const itemSchema = z.object({

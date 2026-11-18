@@ -61,6 +61,7 @@ export async function feedbackAfterLog(
         ? { data: fallback(), source: "fallback" as const }
         : await runAI({
             supabase,
+            userId: userId,
             call: async () => {
               const r = await getAI().generateJSON({
                 system: `${PROFE_PERSONA}\nRespondé con 1 o 2 oraciones (máx. 220 caracteres): cómo viene el día y un tip concreto.`,

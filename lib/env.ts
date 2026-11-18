@@ -31,6 +31,10 @@ export function serverEnv() {
       process.env.GEMINI_RICH === "1" ||
       (process.env.GEMINI_RICH !== "0" &&
         /gemma/i.test(process.env.GEMINI_FALLBACK_MODELS ?? process.env.GEMINI_FALLBACK_MODEL ?? "gemma-4-31b-it")),
+    /** Topes de IA (las excepciones por usuario van en la tabla ai_limits). */
+    aiDailyCapPerUser: Number(process.env.AI_DAILY_CAP_PER_USER || 25),
+    aiMonthlyCapPerUser: Number(process.env.AI_MONTHLY_CAP_PER_USER || 400),
+    aiDailyCapGlobal: Number(process.env.AI_DAILY_CAP_GLOBAL || 400),
     usdaApiKey: process.env.USDA_API_KEY ?? "",
     vapidPrivateKey: process.env.VAPID_PRIVATE_KEY ?? "",
     vapidSubject: process.env.VAPID_SUBJECT || "mailto:admin@example.com",
