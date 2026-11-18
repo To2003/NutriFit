@@ -1,5 +1,5 @@
 import "server-only";
-import webpush from "web-push";
+import * as webpush from "web-push";
 import { publicEnv, serverEnv } from "@/lib/env";
 import type { createAdminClient } from "@/lib/supabase/admin";
 
