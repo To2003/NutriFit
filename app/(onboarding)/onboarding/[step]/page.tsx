@@ -1,5 +1,5 @@
 import { notFound, redirect } from "next/navigation";
-import { getMe } from "@/lib/data/me";
+import { getMe, onboardingPath } from "@/lib/data/me";
 import { onboardingInitial } from "@/lib/onboarding/initial";
 import { TOTAL_STEPS } from "@/lib/onboarding/schemas";
 import { StepBasics, StepGoal, StepLifestyle, StepSports } from "@/components/onboarding/steps-a";
@@ -16,7 +16,7 @@ export default async function OnboardingStepPage({ params }: PageProps<"/onboard
   const me = await getMe();
   if (!me) redirect("/login");
   // No se puede saltear pasos sin completar
-  if (!me.details.onboarded_at && step > me.details.onboarding_step) redirect(`/onboarding/${me.details.onboarding_step}`);
+  if (!me.details.onboarded_at && step > me.details.onboarding_step) redirect(onboardingPath(me.details.onboarding_step));
   const init = onboardingInitial(me);
 
   switch (step) {

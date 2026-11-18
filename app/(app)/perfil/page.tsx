@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Avatar } from "@/components/profile/avatar";
 import { MenuLink } from "@/components/profile/menu-link";
 import { EditProfile } from "@/components/profile/edit-profile";
+import { SignOutButton } from "@/components/auth/signout-button";
 import { SPORT_INFO } from "@/lib/domain/catalog";
 import type { Sport } from "@/lib/calc/types";
 
@@ -75,11 +76,7 @@ export default async function PerfilPage() {
         <MenuLink href="/perfil/ajustes/privacidad" label="Privacidad" />
       </nav>
 
-      <form action="/auth/signout" method="post">
-        <button type="submit" className="h-12 w-full rounded-[14px] border border-line text-muted">
-          Cerrar sesión
-        </button>
-      </form>
+      <SignOutButton />
       <p className="pb-4 text-center text-xs text-muted">NutriFit no reemplaza a un médico, nutricionista ni deportólogo.</p>
     </main>
   );

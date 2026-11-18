@@ -85,6 +85,11 @@ export async function loadMe(supabase: ServerClient, userId: string): Promise<Me
 export async function requireMe(): Promise<Me> {
   const me = await getMe();
   if (!me) redirect("/login");
-  if (!me.details.onboarded_at) redirect(`/onboarding/${Math.min(Math.max(me.details.onboarding_step, 1), 10)}`);
+  if (!me.details.onboarded_at) redirect(onboardingPath(me.details.onboarding_step));
   return me;
+}
+
+/** Adónde retomar el onboarding según el último paso guardado. */
+export function onboardingPath(step: number): string {
+  return step > 10 ? "/onboarding/objetivos" : `/onboarding/${Math.max(step, 1)}`;
 }

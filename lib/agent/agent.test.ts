@@ -37,6 +37,11 @@ describe("fallbacks", () => {
   it("día de partido con pocas kcal → sugiere carbos", () => {
     expect(fallbackLogFeedback({ ...base, dayType: "match", hour: 14, kcal: 600 }, "food")).toMatch(/carbos/);
   });
+  it("partido y quedó corto de nafta → recuperar con carbos y proteína", () => {
+    expect(fallbackLogFeedback({ ...base, dayType: "match", hour: 21, kcal: 1500, kcalTarget: 2650 }, "food")).toMatch(/recuperar/);
+    expect(fallbackDailyClose({ ...base, dayType: "match", mealsCount: 3, kcal: 1500, kcalTarget: 2650, trained: true }).ajuste).toMatch(/recuperar/);
+  });
+
   it("cierre del día sin cargas no reta", () => {
     const r = fallbackDailyClose({ ...base, mealsCount: 0, kcal: 0, trained: false });
     expect(r.resumen).toMatch(/sin drama/);

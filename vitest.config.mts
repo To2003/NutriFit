@@ -10,7 +10,9 @@ export default defineConfig({
   },
   test: {
     environment: "node",
-    include: ["lib/**/*.test.ts", "tests/**/*.test.ts"],
+    // `pnpm sim:agent` corre solo el simulador; `pnpm test` lo excluye.
+    include: process.env.SIM ? ["tests/sim/**/*.test.ts"] : ["lib/**/*.test.ts", "tests/**/*.test.ts"],
+    exclude: process.env.SIM ? [] : ["tests/sim/**", "node_modules/**"],
     testTimeout: 30000,
   },
 });

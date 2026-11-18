@@ -12,7 +12,8 @@
     "test:watch": "vitest",
     "db:bundle": "node scripts/db-bundle.mjs",
     "db:types": "node scripts/gen-types.mjs",
-    "db:seeds": "node --experimental-strip-types --no-warnings scripts/gen-seeds.ts"
+    "db:seeds": "node --experimental-strip-types --no-warnings scripts/gen-seeds.ts",
+    "sim:agent": "SIM=1 vitest run --reporter=verbose --silent=false"
   },
   "dependencies": {
     "@google/genai": "^3.5.0",

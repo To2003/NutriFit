@@ -1,5 +1,5 @@
 import { FOODS_AR } from "@/lib/food/foods-ar-data";
-import { normalize } from "@/lib/text";
+import { normalize, tokens } from "@/lib/text";
 
 export interface MealIdea {
   nombre: string;
@@ -39,6 +39,7 @@ const TEMPLATES: Template[] = [
   { nombre: "Guiso de lentejas", receta: "Lentejas guisadas con verduras: rinde para varios días.", tiempo: 45, momentos: ["lunch", "dinner"], dieta: ALL, items: [["Guiso de lentejas", 400], ["Pan francés", 40]] },
   { nombre: "Tarta de verdura y huevo", receta: "Porción de tarta de verdura con un huevo duro y ensalada.", tiempo: 10, momentos: ["lunch", "dinner"], dieta: VEG, items: [["Tarta de verdura", 180], ["Huevo", 55], ["Ensalada mixta", 150]] },
   { nombre: "Arroz con garbanzos y verduras salteadas", receta: "Salteá verduras y sumá garbanzos cocidos sobre arroz.", tiempo: 20, momentos: ["lunch", "dinner"], dieta: ALL, items: [["Arroz integral cocido", 180], ["Garbanzos cocidos", 160], ["Verduras salteadas", 200]] },
+  { nombre: "Arroz con atún y huevo", receta: "Arroz blanco con una lata de atún, huevo duro picado y tomate. Rápido y con mucha proteína.", tiempo: 15, momentos: ["lunch", "dinner"], dieta: OMNI, items: [["Arroz blanco cocido", 200], ["Atún al natural", 120], ["Huevo", 55], ["Tomate", 120]] },
   { nombre: "Tofu salteado con fideos", receta: "Dorá el tofu en cubos y mezclalo con fideos y verduras salteadas.", tiempo: 20, momentos: ["lunch", "dinner"], dieta: ALL, items: [["Tofu", 150], ["Fideos cocidos", 220], ["Verduras salteadas", 150]] },
   { nombre: "Sándwich de pollo", receta: "Pan francés con pechuga a la plancha, tomate y lechuga.", tiempo: 10, momentos: ["lunch", "dinner", "snack"], dieta: OMNI, items: [["Pan francés", 80], ["Pechuga de pollo a la plancha", 120], ["Tomate", 60], ["Lechuga", 20]] },
   { nombre: "Ricota con frutas y miel", receta: "Ricota con frutillas, banana y un hilo de miel.", tiempo: 3, momentos: ["breakfast", "snack", "extra"], dieta: VEG, items: [["Ricota", 120], ["Frutillas", 120], ["Banana", 80], ["Miel", 10]] },
@@ -72,7 +73,7 @@ export function fallbackIdeas(args: {
   mealsLeft: number;
 }): MealIdea[] {
   const avoid = [...args.dislikes, ...args.allergies.split(/[,;]/)].map((s) => normalize(s)).filter((s) => s.length > 2);
-  const pantry = normalize(args.pantry).split(" ").filter((w) => w.length > 2);
+  const pantry = tokens(args.pantry).filter((w) => w.length > 2 && !["tengo", "hay", "algo", "casa", "heladera"].includes(w));
   const maxTime = args.cookingTime === "low" ? 15 : args.cookingTime === "normal" ? 35 : 90;
   const targetKcal = Math.max(250, args.remaining.kcal / Math.max(1, args.mealsLeft));
   const targetProt = Math.max(15, args.remaining.protein / Math.max(1, args.mealsLeft));
@@ -84,7 +85,8 @@ export function fallbackIdeas(args: {
   ).map(ideaFromTemplate);
   const scored = candidates
     .map((i) => {
-      const pantryHits = pantry.filter((w) => normalize(i.ingredientes.map((x) => x.nombre).join(" ")).includes(w)).length;
+      const ing = new Set(i.ingredientes.flatMap((x) => tokens(x.nombre)));
+      const pantryHits = pantry.filter((w) => ing.has(w)).length;
       const momentFit = TEMPLATES.find((t) => t.nombre === i.nombre)!.momentos.includes(args.meal) ? 0 : 2;
       return { i, s: Math.abs(i.kcal - targetKcal) / targetKcal + Math.abs(i.proteina - targetProt) / targetProt + momentFit - pantryHits * 0.6 };
     })

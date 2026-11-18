@@ -30,6 +30,7 @@ describe("fallbackIdeas", () => {
   it("prioriza lo que hay en casa", () => {
     const r = fallbackIdeas({ ...base, pantry: "tengo atún y fideos" });
     expect(r[0].nombre).toMatch(/atún/i);
+    expect(fallbackIdeas({ ...base, pantry: "tengo huevos, arroz y atún" })[0].nombre).toBe("Arroz con atún y huevo");
   });
   it("poco tiempo → recetas rápidas", () => {
     expect(fallbackIdeas({ ...base, cookingTime: "low" }).every((i) => i.tiempo_min <= 15)).toBe(true);

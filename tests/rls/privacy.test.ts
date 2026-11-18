@@ -166,3 +166,22 @@ describe("bloqueos", () => {
     expect(await count(U.extra, "blocks")).toBe(0);
   });
 });
+
+describe("alimentos", () => {
+  it("los alimentos propios no se ven entre usuarios; la base común sí", async () => {
+    await asUser(db, U.toto, (tx) =>
+      tx.query("insert into public.foods (name, source, kcal, created_by) values ('Receta secreta de la abuela', 'custom', 200, $1)", [U.toto]),
+    );
+    await db.query("insert into public.foods (name, source, kcal) values ('Banana', 'local', 89)");
+    expect(await count(U.toto, "foods", "source = 'custom'")).toBe(1);
+    expect(await count(U.amigo, "foods", "source = 'custom'")).toBe(0);
+    expect(await count(U.amigo, "foods", "source = 'local'")).toBe(1);
+  });
+
+  it("nadie puede crear alimentos 'local' ni marcarlos verificados", async () => {
+    await expect(asUser(db, U.amigo, (tx) => tx.query("insert into public.foods (name, source, kcal, created_by) values ('Fake', 'local', 1, $1)", [U.amigo]))).rejects.toThrow();
+    await expect(
+      asUser(db, U.amigo, (tx) => tx.query("insert into public.foods (name, source, kcal, created_by, verified) values ('Fake', 'off', 1, $1, true)", [U.amigo])),
+    ).rejects.toThrow();
+  });
+});

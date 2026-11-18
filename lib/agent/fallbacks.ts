@@ -40,6 +40,7 @@ export function fallbackLogFeedback(s: DaySnapshot, kind: "food" | "water" | "we
     return pick(["Entreno anotado 💪 Acordate de la proteína en la próxima comida.", "Bien ahí. Recuperá con agua y una comida con proteína."], seed);
   }
   // comida
+  if (s.dayType === "match" && k < 0.75 && s.hour >= 19) return "Hoy jugaste y vas corto de nafta: cená con carbos y proteína (fideos con pollo, arroz con atún) para recuperar 🏆";
   if (s.dayType === "match" && k < 0.5 && s.hour >= 12) return "Día de partido: sumá carbos (arroz, fideos, pan) para llegar con nafta 🏆";
   if (p >= 0.9) return pick(["Proteína al día 🔥 Lo demás viene solo.", "Vas bárbaro con la proteína. Seguí así."], seed);
   if (p < 0.5 && s.hour >= 15)
@@ -72,7 +73,9 @@ export function fallbackDailyClose(s: DaySnapshot & { trained: boolean }): Daily
             ? "Entrenaste. Eso no te lo saca nadie."
             : `Cargaste ${s.mealsCount} ${s.mealsCount === 1 ? "comida" : "comidas"}.`;
   const ajuste =
-    s.mealsCount < 3
+    s.dayType !== "rest" && s.mealsCount >= 3 && k < 75
+      ? "Hoy quedaste corto para lo que entrenaste. Mañana arrancá con un desayuno con carbos y proteína: el cuerpo lo pide para recuperar."
+      : s.mealsCount < 3
       ? "Mañana probá cargar cada comida apenas la terminás: son 10 segundos."
       : p < 0.8
         ? "Mañana sumá una porción de proteína en el desayuno (huevos, yogur o queso)."

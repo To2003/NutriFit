@@ -112,7 +112,7 @@ export async function uploadAvatarAction(form: FormData): Promise<Res> {
   const c = await ctx();
   if (!c) return { ok: false, error: "Se cortó la sesión" };
   const file = form.get("avatar");
-  if (!(file instanceof File) || file.size === 0 || file.size > 2 * 1024 * 1024 || !file.type.startsWith("image/")) return { ok: false, error: "Imagen inválida (máx. 2 MB)" };
+  if (!(file instanceof File) || file.size === 0 || file.size > 2 * 1024 * 1024 || !["image/webp", "image/jpeg", "image/png"].includes(file.type)) return { ok: false, error: "Imagen inválida (máx. 2 MB)" };
   // Avatar como data URL chico (≤ 2 MB ya comprimido en el cliente a ~256 px); evita un bucket público.
   const b64 = Buffer.from(await file.arrayBuffer()).toString("base64");
   if (b64.length > 200_000) return { ok: false, error: "La imagen es muy pesada" };

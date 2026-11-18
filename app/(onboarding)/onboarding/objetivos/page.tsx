@@ -11,7 +11,7 @@ export const metadata = { title: "Tus objetivos" };
 export default async function ObjetivosOnboardingPage() {
   const me = await getMe();
   if (!me) redirect("/login");
-  if (me.details.onboarding_step <= 10 && !me.details.onboarded_at) redirect(`/onboarding/${me.details.onboarding_step}`);
+  if (me.details.onboarding_step <= 10 && !me.details.onboarded_at) redirect(`/onboarding/${Math.max(me.details.onboarding_step, 1)}`);
   const view = goalsView(me);
   if (!view) redirect("/onboarding/1");
   return (
