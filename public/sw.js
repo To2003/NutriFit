@@ -1,5 +1,5 @@
 /* NutriFit service worker — offline básico + push. Escrito a mano (sin Serwist: Next 16 usa Turbopack). */
-const VERSION = "nf-v1";
+const VERSION = "nf-v2";
 const STATIC_CACHE = `${VERSION}-static`;
 const PAGES_CACHE = `${VERSION}-pages`;
 const OFFLINE_URL = "/offline";
