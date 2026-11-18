@@ -25,7 +25,7 @@ export interface AIProvider {
   analyzeImage<T>(opts: { system: string; prompt: string; schema: z.ZodType<T>; image: ImageInput }): Promise<T>;
 }
 
-const TIMEOUT_MS = 25_000;
+const TIMEOUT_MS = 45_000; // los Flash nuevos "piensan" antes de responder (fotos incluidas)
 const RETRIES = 2;
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
