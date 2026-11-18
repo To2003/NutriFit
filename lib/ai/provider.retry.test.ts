@@ -1,9 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiError } from "@google/genai";
 import { z } from "zod";
-import { AIUnavailableError, GeminiProvider, __resetThinkingSupport } from "./provider";
+import { AIUnavailableError, GeminiProvider, __resetThinkingSupport, extractJson } from "./provider";
 
-type Req = { model: string; config: { thinkingConfig?: unknown; abortSignal?: AbortSignal } };
+type Req = {
+  model: string;
+  contents: { parts: { text?: string }[] }[];
+  config: { thinkingConfig?: unknown; abortSignal?: AbortSignal; systemInstruction?: unknown; responseMimeType?: string };
+};
 const ok = (text: string) => ({ text });
 const apiErr = (status: number, message: string) => new ApiError({ status, message });
 
@@ -78,5 +82,37 @@ describe("GeminiProvider: reintentos y respaldo", () => {
         }),
     );
     await expect(p.generateJSON({ system: "s", prompt: "p", schema, timeoutMs: 30, retries: 0 })).rejects.toMatchObject({ reason: "timeout" });
+  });
+});
+
+describe("Gemma (cupo grande, sin modo JSON)", () => {
+  beforeEach(() => __resetThinkingSupport());
+
+  it("manda instrucciones y schema dentro del prompt, sin systemInstruction/JSON mode/thinking", async () => {
+    const { p, generateContent } = provider(async () => ok('Acá va:\n```json\n{"mensaje":"de gemma"}\n```'));
+    (p as unknown as { model: string }).model = "gemma-4-31b-it";
+    const r = await p.generateJSON({ system: "Sos el Profe", prompt: "hola", schema, thinking: "low" });
+    expect(r.mensaje).toBe("de gemma");
+    const req = generateContent.mock.calls[0][0];
+    expect(req.config.systemInstruction).toBeUndefined();
+    expect(req.config.responseMimeType).toBeUndefined();
+    expect(req.config.thinkingConfig).toBeUndefined();
+    const text = req.contents[0].parts.at(-1)!.text!;
+    expect(text).toContain("Sos el Profe");
+    expect(text).toContain("JSON Schema");
+  });
+
+  it('prefer: "volume" prueba Gemma primero', async () => {
+    const { p, generateContent } = provider(async () => ok('{"mensaje":"x"}'), ["gemma-4-31b-it", "backup-model"]);
+    await p.generateJSON({ system: "s", prompt: "p", schema, prefer: "volume" });
+    expect(generateContent.mock.calls[0][0].model).toBe("gemma-4-31b-it");
+    await p.generateJSON({ system: "s", prompt: "p", schema });
+    expect(generateContent.mock.calls[1][0].model).toBe("main-model");
+  });
+
+  it("extractJson tolera texto alrededor y bloques de código", () => {
+    expect(extractJson('```json\n{"a":1}\n```')).toEqual({ a: 1 });
+    expect(extractJson('Claro! {"a":2} espero que sirva')).toEqual({ a: 2 });
+    expect(() => extractJson("nada de json")).toThrow();
   });
 });

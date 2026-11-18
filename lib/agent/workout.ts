@@ -45,6 +45,7 @@ export async function workoutFeedback(supabase: ServerClient, userId: string, da
         }),
         schema,
         temperature: 0.7,
+        prefer: "volume",
         thinking: "minimal",
         timeoutMs: 9_000,
         retries: 0,

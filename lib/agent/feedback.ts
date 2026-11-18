@@ -68,6 +68,7 @@ export async function feedbackAfterLog(
                 schema: feedbackSchema,
                 temperature: 0.7,
                 // el usuario está esperando que se guarde: rápido o fallback
+                prefer: "volume",
                 thinking: "minimal",
                 timeoutMs: 9_000,
                 retries: 0,

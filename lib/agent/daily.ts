@@ -59,6 +59,7 @@ Hacé el cierre del día: "resumen" (balance de kcal, proteína, agua y entreno 
         prompt: JSON.stringify({ hoy: dayContext(me, day), perfil: profileContext(me), entreno_hoy: trained }),
         schema,
         temperature: 0.7,
+        prefer: "volume",
         thinking: "low",
         timeoutMs: 25_000,
         retries: 1,

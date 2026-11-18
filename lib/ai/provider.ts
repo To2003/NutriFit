@@ -28,6 +28,11 @@ export interface CallOptions {
   timeoutMs?: number;
   /** Reintentos ante errores temporales (503/429/timeout). */
   retries?: number;
+  /**
+   * "quality" (default): primero el modelo principal (Gemini). "volume": primero los Gemma, que tienen
+   * un cupo gratis mucho más grande; para tareas frecuentes y livianas (feedback, cierre del día).
+   */
+  prefer?: "quality" | "volume";
 }
 
 export interface AIProvider {
@@ -87,10 +92,21 @@ function toJsonSchema(schema: z.ZodType): unknown {
   return cleanSchema(z.toJSONSchema(schema, { target: "draft-7", unrepresentable: "any" }));
 }
 
-function extractJson(text: string): unknown {
-  const trimmed = text.trim().replace(/^```(?:json)?\s*/i, "").replace(/```$/, "");
-  return JSON.parse(trimmed);
+export function extractJson(text: string): unknown {
+  const trimmed = text.trim().replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/, "").trim();
+  try {
+    return JSON.parse(trimmed);
+  } catch {
+    // modelos sin modo JSON (Gemma) a veces agregan texto antes/después
+    const a = trimmed.indexOf("{");
+    const b = trimmed.lastIndexOf("}");
+    if (a >= 0 && b > a) return JSON.parse(trimmed.slice(a, b + 1));
+    throw new Error("sin JSON");
+  }
 }
+
+/** Gemma (modelos abiertos): sin instrucciones de sistema, sin modo JSON ni thinkingLevel. */
+export const isGemma = (model: string) => /^gemma/i.test(model);
 
 type CallBody = { system: string; prompt: string; image?: ImageInput; jsonSchema?: unknown } & CallOptions;
 
@@ -110,20 +126,31 @@ export class GeminiProvider implements AIProvider {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
     try {
+      const gemma = isGemma(model);
       const parts: ({ text: string } | { inlineData: { mimeType: string; data: string } })[] = [];
       if (opts.image) parts.push({ inlineData: { mimeType: opts.image.mimeType, data: opts.image.data } });
-      parts.push({ text: opts.prompt });
+      parts.push({
+        text: gemma
+          ? `${opts.system}\n\n${opts.prompt}${
+              opts.jsonSchema
+                ? `\n\nRespondé SOLO con un objeto JSON válido (sin texto extra ni bloques de código) que cumpla este JSON Schema:\n${JSON.stringify(opts.jsonSchema)}`
+                : ""
+            }`
+          : opts.prompt,
+      });
       const res = await withSlot(() =>
         this.client.models.generateContent({
           model,
           contents: [{ role: "user", parts }],
-          config: {
-            systemInstruction: opts.system,
-            temperature: opts.temperature ?? 0.4,
-            abortSignal: controller.signal,
-            ...(thinkingSupported && opts.thinking ? { thinkingConfig: { thinkingLevel: THINKING[opts.thinking] } } : {}),
-            ...(opts.jsonSchema ? { responseMimeType: "application/json", responseJsonSchema: opts.jsonSchema } : {}),
-          },
+          config: gemma
+            ? { temperature: opts.temperature ?? 0.4, abortSignal: controller.signal }
+            : {
+                systemInstruction: opts.system,
+                temperature: opts.temperature ?? 0.4,
+                abortSignal: controller.signal,
+                ...(thinkingSupported && opts.thinking ? { thinkingConfig: { thinkingLevel: THINKING[opts.thinking] } } : {}),
+                ...(opts.jsonSchema ? { responseMimeType: "application/json", responseJsonSchema: opts.jsonSchema } : {}),
+              },
         }),
       );
       const text = res.text;
@@ -140,7 +167,8 @@ export class GeminiProvider implements AIProvider {
   private async call(opts: CallBody): Promise<string> {
     const retries = opts.retries ?? RETRIES;
     const timeoutMs = opts.timeoutMs ?? TIMEOUT_MS;
-    const all = [...new Set([this.model, ...this.fallbackModels])];
+    let all = [...new Set([this.model, ...this.fallbackModels])];
+    if (opts.prefer === "volume") all = [...all.filter(isGemma), ...all.filter((m) => !isGemma(m))];
     const models = all.filter((m) => !isExhausted(m));
     let lastErr: unknown = new AIUnavailableError("Todos los modelos sin cupo por hoy", "quota");
     for (const model of models) {
@@ -152,7 +180,7 @@ export class GeminiProvider implements AIProvider {
           const status = e instanceof ApiError ? e.status : 0;
           const msg = String((e as Error)?.message ?? "");
           // Modelo que no acepta thinkingLevel: reintento inmediato sin esa opción
-          if (status === 400 && /thinking/i.test(msg) && thinkingSupported && opts.thinking) {
+          if (status === 400 && /thinking/i.test(msg) && thinkingSupported && opts.thinking && !isGemma(model)) {
             thinkingSupported = false;
             attempt--;
             continue;

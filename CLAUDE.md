@@ -115,9 +115,11 @@ tests/rls/
 - La IA de rutinas recibe la biblioteca filtrada (equipamiento, nivel, molestias) + un plan base por reglas; elige por id. Si el plan IA no pasa el validador después de `fixPlan`, se usa el de reglas.
 - Días livianos (MD±1): ≤ 2 series y RIR ≥ 3, y no se progresan en el mesociclo. Lo que no tiene RIR (movilidad, saltos) sigue sin RIR; accesorios/prevención con RIR base ≥ 3 no bajan de RIR 2.
 - Modo demo (`pnpm demo`): backend en memoria (`lib/demo/*`) con la API del query builder; sin RLS, sin IA. Solo para ver/probar sin Supabase.
-- **Cupo de Gemini (plan gratis): ~5 RPM y 20 RPD por modelo y por proyecto.** Por eso:
-  - cadena de modelos `GEMINI_MODEL` → `GEMINI_FALLBACK_MODELS` (cada uno con su cupo); un 429 pasa al siguiente sin reintentar y ese modelo no se vuelve a probar en el día;
-  - la IA se usa solo en: interpretar comida (texto/foto), ¿Qué como?, rutina y revisión semanal. Feedback por carga, cierre del día y feedback de sesión salen de reglas salvo `GEMINI_RICH=1`;
+- **Cupo de la API de Google (plan gratis), por modelo y por proyecto:** Gemini Flash ~5 RPM / 20 RPD; **Gemma 4 (26B/31B) 30 RPM / 14.400 RPD / 16K TPM**. Por eso:
+  - cadena `GEMINI_MODEL` (gemini-3.8-flash) → `GEMINI_FALLBACK_MODELS` (default `gemma-4-31b-it,gemini-3-flash,gemini-2.5-flash-lite`); 429 pasa al siguiente sin reintentar y ese modelo no se vuelve a probar en el día; 404 también pasa al siguiente;
+  - tareas de calidad (comida texto/foto, ¿Qué como?, rutina, revisión semanal) prueban primero Gemini; tareas frecuentes (feedback por carga, cierre del día, feedback de sesión) usan `prefer: "volume"` → Gemma primero;
+  - Gemma no acepta systemInstruction, modo JSON ni thinkingLevel: se mandan instrucciones + JSON Schema en el prompt y zod valida igual;
+  - `GEMINI_RICH`: por defecto activo si hay Gemma en la cadena; `0` apaga la IA en tareas frecuentes;
   - tope blando de 15 llamadas por usuario por día (`ai_usage` + `bump_ai_usage`).
 - Guardrail: se prohíbe "ayuno/ayunar", no "en ayunas" (pesarse).
 - Ingesta baja: si ≥ 3 días completos < 80 % del piso calórico, el Profe no felicita y sugiere ver a un profesional.
