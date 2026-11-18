@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { motion } from "motion/react";
 import { Activity, Droplets, Scale, UtensilsCrossed } from "lucide-react";
 import { Sheet } from "@/components/ui/sheet";
@@ -19,13 +19,12 @@ const OPTIONS = [
 ] as const;
 
 export function QuickAdd({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
-  const [mode, setMode] = useState<Mode>(null);
-
-  // Atajos del manifest: /diario?add=food|water
-  useEffect(() => {
+  // Atajos del manifest: /diario?add=food|water abre directo esa carga
+  const [mode, setMode] = useState<Mode>(() => {
+    if (typeof window === "undefined") return null;
     const add = new URLSearchParams(window.location.search).get("add");
-    if (add === "food" || add === "water" || add === "weight" || add === "activity") setMode(add);
-  }, []);
+    return add === "food" || add === "water" || add === "weight" || add === "activity" ? add : null;
+  });
 
   const go = (m: Exclude<Mode, null>) => {
     vibrate(8);

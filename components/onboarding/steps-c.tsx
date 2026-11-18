@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { toast } from "sonner";
 import { Field, Input } from "@/components/ui/field";
 import { Segmented, Toggle } from "@/components/ui/choice";
@@ -11,10 +11,13 @@ import type { OnboardingInitial } from "./types";
 
 export function StepNotifications({ initial }: { initial: OnboardingInitial["notif"] }) {
   const [v, setV] = useState(initial);
-  const [iosHint, setIosHint] = useState(false);
+  const iosHint = useSyncExternalStore(
+    () => () => {},
+    () => isIOS() && !isStandalone(),
+    () => false,
+  );
   const { pending, submit } = useStepSubmit(9);
   const set = <K extends keyof typeof v>(k: K, val: (typeof v)[K]) => setV((s) => ({ ...s, [k]: val }));
-  useEffect(() => setIosHint(isIOS() && !isStandalone()), []);
 
   const next = async () => {
     let enabled = v.enabled;

@@ -53,22 +53,35 @@ async function compressImage(file: File): Promise<Blob> {
   return new Promise((res) => canvas.toBlob((b) => res(b ?? file), "image/jpeg", 0.8));
 }
 
-export function FoodComposer({
-  open,
-  onOpenChange,
-  initialMeal,
-  initialItems,
-  origin: initialOrigin,
-}: {
+export function FoodComposer(props: {
   open: boolean;
   onOpenChange: (o: boolean) => void;
   initialMeal?: Meal;
   initialItems?: DraftItem[];
   origin?: "suggestion";
 }) {
+  // El cuerpo se monta de nuevo en cada apertura: el estado arranca limpio sin efectos de reseteo.
+  return (
+    <Sheet open={props.open} onOpenChange={props.onOpenChange} title="Comida" className="h-[92dvh]">
+      <ComposerBody initialMeal={props.initialMeal} initialItems={props.initialItems} origin={props.origin} onDone={() => props.onOpenChange(false)} />
+    </Sheet>
+  );
+}
+
+function ComposerBody({
+  initialMeal,
+  initialItems,
+  origin: initialOrigin,
+  onDone,
+}: {
+  initialMeal?: Meal;
+  initialItems?: DraftItem[];
+  origin?: "suggestion";
+  onDone: () => void;
+}) {
   const date = useActiveDate();
   const router = useRouter();
-  const [meal, setMeal] = useState<Meal>(initialMeal ?? defaultMealForHour(new Date().getHours()));
+  const [meal, setMeal] = useState<Meal>(() => initialMeal ?? defaultMealForHour(new Date().getHours()));
   const [tab, setTab] = useState<Tab>("text");
   const [stage, setStage] = useState<"input" | "confirm">(initialItems?.length ? "confirm" : "input");
   const [items, setItems] = useState<DraftItem[]>(initialItems ?? []);
@@ -79,29 +92,6 @@ export function FoodComposer({
   const [note, setNote] = useState<string | null>(null);
   const [busy, startBusy] = useTransition();
   const [saving, startSaving] = useTransition();
-
-  useEffect(() => {
-    if (open) {
-      setMeal(initialMeal ?? defaultMealForHour(new Date().getHours()));
-      if (initialItems?.length) {
-        setItems(initialItems);
-        setStage("confirm");
-        setOrigin(initialOrigin ?? "search");
-      }
-    } else {
-      // reset al cerrar
-      setTimeout(() => {
-        setStage("input");
-        setItems([]);
-        setText("");
-        setPhotoPath(null);
-        setPhotoPreview(null);
-        setNote(null);
-        setTab("text");
-      }, 250);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
 
   const totals = useMemo(
     () =>
@@ -187,14 +177,14 @@ export function FoodComposer({
       });
       if (!r.ok) return void toast.error(r.error);
       vibrate([10, 40, 20]);
-      onOpenChange(false);
+      onDone();
       profeToast(r.feedback, "Comida guardada 👌");
       router.refresh();
     });
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange} title={stage === "confirm" ? "Revisá y guardá" : "¿Qué comiste?"} className="h-[92dvh]">
       <div className="flex min-h-full flex-col pb-2">
+        <p className="-mt-2 mb-2 text-sm text-muted">{stage === "confirm" ? "Revisá las porciones y guardá." : "¿Qué comiste?"}</p>
         <div className="-mx-5 mb-3 flex gap-1.5 overflow-x-auto px-5 pb-1 [scrollbar-width:none]">
           {MEALS.map((m) => (
             <Chip key={m.value} selected={meal === m.value} onToggle={() => setMeal(m.value)} className="shrink-0">
@@ -281,7 +271,6 @@ export function FoodComposer({
           </div>
         )}
       </div>
-    </Sheet>
   );
 }
 
@@ -335,12 +324,14 @@ function FoodSearch({ onPick }: { onPick: (f: FoodRow) => void }) {
     foodShortcutsAction().then(setShortcuts).catch(() => {});
   }, []);
 
-  useEffect(() => {
+  const onQuery = (v: string) => {
+    setQ(v);
     setSearchedExternal(false);
-    if (q.trim().length < 2) {
-      setResults([]);
-      return;
-    }
+    if (v.trim().length < 2) setResults([]);
+  };
+
+  useEffect(() => {
+    if (q.trim().length < 2) return;
     const t = setTimeout(async () => {
       setLoading(true);
       const r = await searchFoodsAction(q);
@@ -362,7 +353,7 @@ function FoodSearch({ onPick }: { onPick: (f: FoodRow) => void }) {
     <div className="space-y-3">
       <div className="relative">
         <Search className="pointer-events-none absolute top-1/2 left-3.5 size-5 -translate-y-1/2 text-muted" />
-        <Input autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="Milanesa, banana, yogur…" className="pl-11" aria-label="Buscar alimento" />
+        <Input autoFocus value={q} onChange={(e) => onQuery(e.target.value)} placeholder="Milanesa, banana, yogur…" className="pl-11" aria-label="Buscar alimento" />
       </div>
       {q.trim().length < 2 && shortcuts ? (
         <>

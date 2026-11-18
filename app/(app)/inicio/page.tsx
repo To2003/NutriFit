@@ -1,7 +1,7 @@
 import { requireMe } from "@/lib/data/me";
 import { loadDay } from "@/lib/data/day";
 import { createClient } from "@/lib/supabase/server";
-import { addDays, formatDayLong } from "@/lib/dates";
+import { addDays, formatDayLong, timeInTz } from "@/lib/dates";
 import { Scoreboard } from "@/components/home/scoreboard";
 import { WaterCard } from "@/components/home/water-card";
 import { WeightChart } from "@/components/home/weight-chart";
@@ -63,7 +63,7 @@ export default async function InicioPage() {
         <Empty title="Faltan datos para tus objetivos">Completá tu perfil y los calculamos.</Empty>
       )}
 
-      <PlannedCardList planned={day.planned.filter((p) => p.status === "pending")} date={me.today} />
+      <PlannedCardList planned={day.planned.filter((p) => p.status === "pending" && (!p.start_time || p.start_time.slice(0, 5) <= timeInTz(me.tz)))} date={me.today} />
 
       {t ? <WaterCard ml={day.waterMl} target={t.waterMl} date={me.today} /> : null}
 
