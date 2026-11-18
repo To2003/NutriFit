@@ -1,5 +1,5 @@
 import "server-only";
-import { GoogleGenAI, ApiError } from "@google/genai";
+import { GoogleGenAI, ApiError, ThinkingLevel } from "@google/genai";
 import { z } from "zod";
 import { serverEnv } from "@/lib/env";
 
@@ -18,15 +18,36 @@ export interface ImageInput {
   data: string;
 }
 
-export interface AIProvider {
-  readonly name: string;
-  generateText(opts: { system: string; prompt: string; temperature?: number }): Promise<string>;
-  generateJSON<T>(opts: { system: string; prompt: string; schema: z.ZodType<T>; temperature?: number; image?: ImageInput }): Promise<T>;
-  analyzeImage<T>(opts: { system: string; prompt: string; schema: z.ZodType<T>; image: ImageInput }): Promise<T>;
+/** Cuánto "piensa" el modelo antes de responder: menos = más rápido. */
+export type Thinking = "minimal" | "low" | "medium" | "high";
+
+export interface CallOptions {
+  temperature?: number;
+  thinking?: Thinking;
+  /** Tiempo máximo por intento. */
+  timeoutMs?: number;
+  /** Reintentos ante errores temporales (503/429/timeout). */
+  retries?: number;
 }
 
-const TIMEOUT_MS = 45_000; // los Flash nuevos "piensan" antes de responder (fotos incluidas)
+export interface AIProvider {
+  readonly name: string;
+  generateText(opts: { system: string; prompt: string } & CallOptions): Promise<string>;
+  generateJSON<T>(opts: { system: string; prompt: string; schema: z.ZodType<T>; image?: ImageInput } & CallOptions): Promise<T>;
+  analyzeImage<T>(opts: { system: string; prompt: string; schema: z.ZodType<T>; image: ImageInput } & CallOptions): Promise<T>;
+}
+
+const TIMEOUT_MS = 30_000;
 const RETRIES = 2;
+const THINKING: Record<Thinking, ThinkingLevel> = {
+  minimal: ThinkingLevel.MINIMAL,
+  low: ThinkingLevel.LOW,
+  medium: ThinkingLevel.MEDIUM,
+  high: ThinkingLevel.HIGH,
+};
+/** Si el modelo no acepta thinkingLevel, dejamos de mandarlo (por instancia). */
+let thinkingSupported = true;
+const isTransient = (status: number) => status === 429 || status === 500 || status === 503 || status === 504;
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 /** Concurrencia limitada por instancia: cola simple para no reventar el rate limit del free tier. */
@@ -64,68 +85,87 @@ function extractJson(text: string): unknown {
   return JSON.parse(trimmed);
 }
 
-class GeminiProvider implements AIProvider {
+type CallBody = { system: string; prompt: string; image?: ImageInput; jsonSchema?: unknown } & CallOptions;
+
+export class GeminiProvider implements AIProvider {
   readonly name = "gemini";
   private client: GoogleGenAI;
+
   constructor(
     apiKey: string,
     private model: string,
+    private fallbackModel: string | null,
   ) {
     this.client = new GoogleGenAI({ apiKey });
   }
 
-  private async call(opts: {
-    system: string;
-    prompt: string;
-    temperature?: number;
-    image?: ImageInput;
-    jsonSchema?: unknown;
-  }): Promise<string> {
+  private async attempt(model: string, opts: CallBody, timeoutMs: number): Promise<string> {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const parts: ({ text: string } | { inlineData: { mimeType: string; data: string } })[] = [];
+      if (opts.image) parts.push({ inlineData: { mimeType: opts.image.mimeType, data: opts.image.data } });
+      parts.push({ text: opts.prompt });
+      const res = await withSlot(() =>
+        this.client.models.generateContent({
+          model,
+          contents: [{ role: "user", parts }],
+          config: {
+            systemInstruction: opts.system,
+            temperature: opts.temperature ?? 0.4,
+            abortSignal: controller.signal,
+            ...(thinkingSupported && opts.thinking ? { thinkingConfig: { thinkingLevel: THINKING[opts.thinking] } } : {}),
+            ...(opts.jsonSchema ? { responseMimeType: "application/json", responseJsonSchema: opts.jsonSchema } : {}),
+          },
+        }),
+      );
+      const text = res.text;
+      if (!text) throw new AIUnavailableError("Respuesta vacía", "invalid_output");
+      return text;
+    } catch (e) {
+      if (controller.signal.aborted) throw new AIUnavailableError(`Timeout (${timeoutMs} ms)`, "timeout");
+      throw e;
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  private async call(opts: CallBody): Promise<string> {
+    const retries = opts.retries ?? RETRIES;
+    const timeoutMs = opts.timeoutMs ?? TIMEOUT_MS;
+    const models = [this.model, ...(this.fallbackModel && this.fallbackModel !== this.model ? [this.fallbackModel] : [])];
     let lastErr: unknown;
-    for (let attempt = 0; attempt <= RETRIES; attempt++) {
-      const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
-      try {
-        const parts: ({ text: string } | { inlineData: { mimeType: string; data: string } })[] = [];
-        if (opts.image) parts.push({ inlineData: { mimeType: opts.image.mimeType, data: opts.image.data } });
-        parts.push({ text: opts.prompt });
-        const res = await withSlot(() =>
-          this.client.models.generateContent({
-            model: this.model,
-            contents: [{ role: "user", parts }],
-            config: {
-              systemInstruction: opts.system,
-              temperature: opts.temperature ?? 0.4,
-              abortSignal: controller.signal,
-              ...(opts.jsonSchema ? { responseMimeType: "application/json", responseJsonSchema: opts.jsonSchema } : {}),
-            },
-          }),
-        );
-        const text = res.text;
-        if (!text) throw new AIUnavailableError("Respuesta vacía", "invalid_output");
-        return text;
-      } catch (e) {
-        lastErr = e;
-        const status = e instanceof ApiError ? e.status : 0;
-        if (controller.signal.aborted) lastErr = new AIUnavailableError("Timeout", "timeout");
-        // No reintentar errores del cliente (salvo 429)
-        if (status && status < 500 && status !== 429) break;
-        if (status === 429 && attempt === RETRIES) break;
-        if (attempt < RETRIES) await sleep(600 * 2 ** attempt + Math.random() * 300);
-      } finally {
-        clearTimeout(timer);
+    for (const model of models) {
+      for (let attempt = 0; attempt <= retries; attempt++) {
+        try {
+          return await this.attempt(model, opts, timeoutMs);
+        } catch (e) {
+          lastErr = e;
+          const status = e instanceof ApiError ? e.status : 0;
+          const msg = String((e as Error)?.message ?? "");
+          // Modelo que no acepta thinkingLevel: reintento inmediato sin esa opción
+          if (status === 400 && /thinking/i.test(msg) && thinkingSupported && opts.thinking) {
+            thinkingSupported = false;
+            attempt--;
+            continue;
+          }
+          const transient = isTransient(status) || (e instanceof AIUnavailableError && e.reason === "timeout");
+          if (!transient) break; // 400/401/403/404: no tiene sentido reintentar este modelo
+          if (attempt < retries) await sleep((status === 503 || status === 429 ? 1500 : 500) * 2 ** attempt + Math.random() * 300);
+        }
       }
+      // si el principal está caído/saturado o no existe, probamos el de respaldo
     }
     if (lastErr instanceof AIUnavailableError) throw lastErr;
     const status = lastErr instanceof ApiError ? lastErr.status : 0;
-    throw new AIUnavailableError(String((lastErr as Error)?.message ?? lastErr), status === 429 ? "quota" : "error");
+    throw new AIUnavailableError(String((lastErr as Error)?.message ?? lastErr), status === 429 || status === 503 ? "quota" : "error");
   }
 
-  async generateText(opts: { system: string; prompt: string; temperature?: number }) {
+  async generateText(opts: { system: string; prompt: string } & CallOptions) {
     return this.call(opts);
   }
 
-  async generateJSON<T>(opts: { system: string; prompt: string; schema: z.ZodType<T>; temperature?: number; image?: ImageInput }) {
+  async generateJSON<T>(opts: { system: string; prompt: string; schema: z.ZodType<T>; image?: ImageInput } & CallOptions) {
     const text = await this.call({ ...opts, jsonSchema: toJsonSchema(opts.schema) });
     let raw: unknown;
     try {
@@ -138,8 +178,8 @@ class GeminiProvider implements AIProvider {
     return parsed.data;
   }
 
-  async analyzeImage<T>(opts: { system: string; prompt: string; schema: z.ZodType<T>; image: ImageInput }) {
-    return this.generateJSON({ ...opts, temperature: 0.2 });
+  async analyzeImage<T>(opts: { system: string; prompt: string; schema: z.ZodType<T>; image: ImageInput } & CallOptions) {
+    return this.generateJSON({ temperature: 0.2, thinking: "low", timeoutMs: 40_000, retries: 1, ...opts });
   }
 }
 
@@ -162,11 +202,16 @@ let provider: AIProvider | null = null;
 export function getAI(): AIProvider {
   if (provider) return provider;
   const env = serverEnv();
-  provider = env.geminiApiKey ? new GeminiProvider(env.geminiApiKey, env.geminiModel) : new NullProvider();
+  provider = env.geminiApiKey ? new GeminiProvider(env.geminiApiKey, env.geminiModel, env.geminiFallbackModel) : new NullProvider();
   return provider;
 }
 
 /** Para tests. */
 export function setAI(p: AIProvider | null) {
   provider = p;
+}
+
+/** Solo tests: vuelve a habilitar thinkingLevel. */
+export function __resetThinkingSupport() {
+  thinkingSupported = true;
 }

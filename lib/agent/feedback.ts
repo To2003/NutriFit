@@ -65,6 +65,10 @@ export async function feedbackAfterLog(
                 prompt: `La persona ${KIND_LABEL[args.kind]}.${args.extra ? ` Detalle: ${args.extra}.` : ""}\nContexto del día (JSON):\n${JSON.stringify(dayContext(me, day))}`,
                 schema: feedbackSchema,
                 temperature: 0.7,
+                // el usuario está esperando que se guarde: rápido o fallback
+                thinking: "minimal",
+                timeoutMs: 9_000,
+                retries: 0,
               });
               if (violatesGuardrails(r.mensaje)) throw new Error("guardrail");
               return r;

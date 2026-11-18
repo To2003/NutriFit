@@ -43,6 +43,9 @@ export async function workoutFeedback(supabase: ServerClient, userId: string, da
         }),
         schema,
         temperature: 0.7,
+        thinking: "minimal",
+        timeoutMs: 9_000,
+        retries: 0,
       });
       if (violatesGuardrails(r.mensaje)) throw new Error("guardrail");
       // dolor → siempre derivar

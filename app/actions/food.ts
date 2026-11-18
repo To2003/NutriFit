@@ -47,7 +47,7 @@ export async function analyzeFoodTextAction(
   const out = await runAI({
     supabase,
     call: async () => {
-      const parsed = await ai.generateJSON({ system: FOOD_PARSE_SYSTEM, prompt: foodParsePrompt(input), schema: aiFoodParseSchema, temperature: 0.2 });
+      const parsed = await ai.generateJSON({ system: FOOD_PARSE_SYSTEM, prompt: foodParsePrompt(input), schema: aiFoodParseSchema, temperature: 0.2, thinking: "low", timeoutMs: 25_000, retries: 1 });
       return { items: await draftsFromAI(supabase, parsed.items), missing: [] as string[] };
     },
     fallback: () => draftsFromText(supabase, input),

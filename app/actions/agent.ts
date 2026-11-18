@@ -67,6 +67,9 @@ Proponé 3 opciones de comida argentinas, simples y realistas, con receta corta.
         }),
         schema: aiSuggestSchema,
         temperature: 0.8,
+        thinking: "low",
+        timeoutMs: 30_000,
+        retries: 1,
       });
       const ideas = r.opciones.map((o) => {
         const sum = (k: "kcal" | "proteina" | "carbos" | "grasa") => Math.round(o.ingredientes.reduce((s, i) => s + i[k], 0));

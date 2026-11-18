@@ -139,6 +139,9 @@ Hacé la revisión semanal en 3 bloques cortos: "tendencia" (peso de tendencia, 
         prompt: JSON.stringify({ semana: stats, ajuste_tdee: tdee, objetivos_anteriores: prev, perfil: profileContext(me) }),
         schema,
         temperature: 0.6,
+        thinking: "medium",
+        timeoutMs: 40_000,
+        retries: 1,
       });
       if (violatesGuardrails([r.tendencia, r.adherencia, r.gym, ...r.objetivos].join(" "))) throw new Error("guardrail");
       return r;

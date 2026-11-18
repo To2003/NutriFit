@@ -15,6 +15,8 @@ export function serverEnv() {
     serviceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY ?? "",
     geminiApiKey: process.env.GEMINI_API_KEY ?? "",
     geminiModel: process.env.GEMINI_MODEL || "gemini-3.8-flash",
+    /** Opcional: modelo de respaldo si el principal está saturado (503) o no existe. */
+    geminiFallbackModel: process.env.GEMINI_FALLBACK_MODEL || null,
     usdaApiKey: process.env.USDA_API_KEY ?? "",
     vapidPrivateKey: process.env.VAPID_PRIVATE_KEY ?? "",
     vapidSubject: process.env.VAPID_SUBJECT || "mailto:admin@example.com",
