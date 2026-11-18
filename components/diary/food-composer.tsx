@@ -111,7 +111,9 @@ function ComposerBody({
       if (!r.ok) return void toast.error(r.error);
       setOrigin("text");
       setNote(
-        r.missing.length
+        r.notice
+          ? r.notice
+          : r.missing.length
           ? `No encontré: ${r.missing.join(", ")}. Agregalo desde el buscador.`
           : r.source === "fallback"
             ? "El Profe está sin señal: lo armamos con la base local. Revisá las porciones."
@@ -136,7 +138,7 @@ function ComposerBody({
       setOrigin("photo");
       setPhotoPath(r.photoPath);
       if (r.items.length === 0) {
-        setNote("No pude reconocer el plato. Contámelo por texto o buscalo y lo cargamos igual.");
+        setNote(r.notice ?? "No pude reconocer el plato. Contámelo por texto o buscalo y lo cargamos igual.");
         setTab("text");
         return;
       }

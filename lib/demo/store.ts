@@ -372,6 +372,7 @@ export function createDemoClient() {
     from: (table: string) => new Query(table),
     rpc: async (fn: string, args?: Record<string, unknown>) => {
       if (fn === "bump_ai_usage") return { data: 1, error: null };
+      if (fn === "consume_ai_quota") return { data: null, error: null };
       if (fn === "visible_sections") {
         const owner = args?.owner as string;
         if (owner === DEMO_USER) return { data: ["streaks", "training", "tests", "meals", "body"], error: null };

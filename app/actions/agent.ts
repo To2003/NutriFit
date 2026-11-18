@@ -17,7 +17,7 @@ import { MEALS } from "@/lib/domain/catalog";
 
 type Fail = { ok: false; error: string };
 
-export async function suggestMealsAction(input: { meal: string; pantry: string }): Promise<{ ok: true; ideas: MealIdea[]; source: "ai" | "fallback" } | Fail> {
+export async function suggestMealsAction(input: { meal: string; pantry: string }): Promise<{ ok: true; ideas: MealIdea[]; source: "ai" | "fallback"; notice: string | null } | Fail> {
   const userId = await getUserId();
   if (!userId) return { ok: false, error: "Se cortó la sesión" };
   const p = z.object({ meal: z.enum(["breakfast", "lunch", "snack", "dinner", "extra"]), pantry: z.string().max(300) }).safeParse(input);
@@ -67,6 +67,9 @@ Proponé 3 opciones de comida argentinas, simples y realistas, con receta corta.
         }),
         schema: aiSuggestSchema,
         temperature: 0.8,
+        thinking: "low",
+        timeoutMs: 30_000,
+        retries: 1,
       });
       const ideas = r.opciones.map((o) => {
         const sum = (k: "kcal" | "proteina" | "carbos" | "grasa") => Math.round(o.ingredientes.reduce((s, i) => s + i[k], 0));
@@ -97,7 +100,8 @@ Proponé 3 opciones de comida argentinas, simples y realistas, con receta corta.
     content: { text: `Ideas para ${MEALS.find((m) => m.value === p.data.meal)?.label.toLowerCase()}: ${out.data.map((i) => i.nombre).join(", ")}.`, ideas: out.data.map((i) => i.nombre) },
     source: out.source,
   });
-  return { ok: true, ideas: out.data, source: out.source };
+  const { QUOTA_COPY } = await import("@/lib/ai/quota");
+  return { ok: true, ideas: out.data, source: out.source, notice: out.reason && out.reason in QUOTA_COPY ? QUOTA_COPY[out.reason as keyof typeof QUOTA_COPY] : null };
 }
 
 /** Convierte una idea en ítems editables (matchea con la base cuando puede). */

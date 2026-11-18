@@ -94,6 +94,7 @@ export async function generateWeekPlan(supabase: ServerClient, me: Me, opts: { e
 
   const out = await runAI<GeneratedProgram>({
     supabase,
+    userId: me.userId,
     call: async () => {
       const days = ctx.gymDays.map((d) => ({
         dia: d,
@@ -120,6 +121,9 @@ export async function generateWeekPlan(supabase: ServerClient, me: Me, opts: { e
         prompt: `Armá la semana. Podés mejorar la propuesta base (ya cumple las reglas). Si hay historial, tenelo en cuenta: si la adherencia fue baja, simplificá; si la sensación fue baja, bajá volumen; si los tests mejoran, mantené el enfoque.\n${prompt}`,
         schema: aiRoutineSchema,
         temperature: 0.5,
+        thinking: "medium",
+        timeoutMs: 50_000,
+        retries: 1,
       });
       const plan = aiToPlan(r, allowedIds);
       const { plan: fixed, changes } = fixPlan(plan, ctx, LIBRARY_BY_ID);

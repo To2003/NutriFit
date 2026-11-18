@@ -134,6 +134,38 @@ export type Database = {
           },
         ];
       };
+      ai_limits: {
+        Row: {
+          user_id: string;
+          daily_cap: number | null;
+          monthly_cap: number | null;
+          note: string;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          daily_cap?: number | null;
+          monthly_cap?: number | null;
+          note?: string;
+          updated_at?: string;
+        };
+        Update: {
+          user_id?: string;
+          daily_cap?: number | null;
+          monthly_cap?: number | null;
+          note?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "ai_limits_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: true;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       ai_usage: {
         Row: {
           user_id: string;
@@ -1565,6 +1597,7 @@ export type Database = {
     Views: { [_ in never]: never };
     Functions: {
       bump_ai_usage: { Args: { failed?: boolean }; Returns: number };
+      consume_ai_quota: { Args: { p_user?: string; failed?: boolean }; Returns: Json };
       visible_sections: { Args: { owner: string }; Returns: string[] };
     };
     Enums: { [_ in never]: never };

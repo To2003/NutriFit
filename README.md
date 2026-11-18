@@ -29,7 +29,7 @@ Spec: [`SPEC.md`](SPEC.md) · Guía para desarrollar: [`CLAUDE.md`](CLAUDE.md)
 4. En Supabase → **Auth → URL Configuration**, agregá la URL de Vercel a *Site URL* y `https://TU-APP.vercel.app/auth/callback` a *Redirect URLs*. Para desarrollo, sumá también `http://localhost:3000/auth/callback`.
 
 ### 3. Claves
-- **Gemini:** API key en aistudio.google.com. `GEMINI_MODEL` = el Flash vigente con soporte de imágenes (por defecto `gemini-2.5-flash`).
+- **Gemini:** API key en aistudio.google.com. `GEMINI_MODEL` = el Flash vigente con soporte de imágenes (por defecto `gemini-3.8-flash`).
 - **USDA:** key en fdc.nal.usda.gov (api.data.gov).
 - **VAPID (push):**
   ```bash

@@ -21,6 +21,7 @@ export function SuggestButton() {
   const [pantry, setPantry] = useState("");
   const [ideas, setIdeas] = useState<MealIdea[] | null>(null);
   const [source, setSource] = useState<"ai" | "fallback">("ai");
+  const [notice, setNotice] = useState<string | null>(null);
   const [pending, start] = useTransition();
   const [draft, setDraft] = useState<DraftItem[] | null>(null);
 
@@ -30,6 +31,7 @@ export function SuggestButton() {
       if (!r.ok) return void toast.error(r.error);
       setIdeas(r.ideas);
       setSource(r.source);
+      setNotice(r.notice);
     });
 
   const register = (idea: MealIdea) =>
@@ -73,7 +75,7 @@ export function SuggestButton() {
           </Button>
           {ideas ? (
             <>
-              {source === "fallback" ? <p className="text-sm text-muted">El Profe está sin señal: van ideas de la casa.</p> : null}
+              {source === "fallback" ? <p className="text-sm text-muted">{notice ?? "El Profe está sin señal: van ideas de la casa."}</p> : null}
               <ul className="space-y-2.5">
                 {ideas.map((i) => (
                   <li key={i.nombre} className="rounded-[18px] border border-line bg-surface-2 p-3.5">

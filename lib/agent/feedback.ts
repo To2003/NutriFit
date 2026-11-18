@@ -8,6 +8,7 @@ import { runAI } from "@/lib/ai/run";
 import { dayContext } from "@/lib/ai/context";
 import { PROFE_PERSONA } from "@/lib/ai/prompts/persona";
 import { timeInTz } from "@/lib/dates";
+import { serverEnv } from "@/lib/env";
 import { violatesGuardrails } from "./guardrails";
 import { fallbackLogFeedback, type DaySnapshot } from "./fallbacks";
 
@@ -55,16 +56,23 @@ export async function feedbackAfterLog(
     const fallback = () => ({ mensaje: fallbackLogFeedback(snap, args.kind) });
 
     const out =
-      args.kind === "water" || args.kind === "weight"
+      // El cupo gratis de Gemini es chico: el feedback por carga sale de las reglas salvo GEMINI_RICH=1
+      args.kind === "water" || args.kind === "weight" || !serverEnv().geminiRich
         ? { data: fallback(), source: "fallback" as const }
         : await runAI({
             supabase,
+            userId: userId,
             call: async () => {
               const r = await getAI().generateJSON({
                 system: `${PROFE_PERSONA}\nRespondé con 1 o 2 oraciones (máx. 220 caracteres): cómo viene el día y un tip concreto.`,
                 prompt: `La persona ${KIND_LABEL[args.kind]}.${args.extra ? ` Detalle: ${args.extra}.` : ""}\nContexto del día (JSON):\n${JSON.stringify(dayContext(me, day))}`,
                 schema: feedbackSchema,
                 temperature: 0.7,
+                // el usuario está esperando que se guarde: rápido o fallback
+                prefer: "volume",
+                thinking: "minimal",
+                timeoutMs: 9_000,
+                retries: 0,
               });
               if (violatesGuardrails(r.mensaje)) throw new Error("guardrail");
               return r;

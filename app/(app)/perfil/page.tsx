@@ -8,17 +8,26 @@ import { EditProfile } from "@/components/profile/edit-profile";
 import { SignOutButton } from "@/components/auth/signout-button";
 import { SPORT_INFO } from "@/lib/domain/catalog";
 import type { Sport } from "@/lib/calc/types";
+import { serverEnv } from "@/lib/env";
 
 export const metadata = { title: "Perfil" };
 
 export default async function PerfilPage() {
   const me = await requireMe();
   const supabase = await createClient();
-  const [followers, following, requests] = await Promise.all([
+  const monthStart = `${me.today.slice(0, 7)}-01`;
+  const [followers, following, requests, usage, limits] = await Promise.all([
     supabase.from("follows").select("*", { count: "exact", head: true }).eq("following_id", me.userId).eq("status", "accepted"),
     supabase.from("follows").select("*", { count: "exact", head: true }).eq("follower_id", me.userId).eq("status", "accepted"),
     supabase.from("follows").select("*", { count: "exact", head: true }).eq("following_id", me.userId).eq("status", "pending"),
+    supabase.from("ai_usage").select("day, calls").eq("user_id", me.userId).gte("day", monthStart),
+    supabase.from("ai_limits").select("daily_cap, monthly_cap").eq("user_id", me.userId).maybeSingle(),
   ]);
+  const env = serverEnv();
+  const aiToday = (usage.data ?? []).find((u) => u.day === me.today)?.calls ?? 0;
+  const aiMonth = (usage.data ?? []).reduce((acc, u) => acc + u.calls, 0);
+  const capDay = limits.data?.daily_cap ?? env.aiDailyCapPerUser;
+  const capMonth = limits.data?.monthly_cap ?? env.aiMonthlyCapPerUser;
   const p = me.profile;
   return (
     <main className="space-y-4 px-4 pt-[max(18px,env(safe-area-inset-top))]">
@@ -62,6 +71,27 @@ export default async function PerfilPage() {
         <MenuLink href="/perfil/logros" label="Logros" />
         <MenuLink href={`/perfil/${p.username}`} label="Ver mi perfil público" hint="Así te ven los demás" />
       </nav>
+
+      <section aria-label="Uso del Profe" className="rounded-[20px] border border-line bg-surface p-4">
+        <p className="font-semibold">Consultas al Profe (IA)</p>
+        <div className="mt-2 grid grid-cols-2 gap-3 text-sm">
+          {[
+            { label: "Hoy", used: aiToday, cap: capDay },
+            { label: "Este mes", used: aiMonth, cap: capMonth },
+          ].map((x) => (
+            <div key={x.label}>
+              <p className="text-muted">{x.label}</p>
+              <p className="tnum font-semibold">
+                {Math.min(x.used, x.cap)} <span className="font-normal text-muted">de {x.cap}</span>
+              </p>
+              <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-surface-2">
+                <div className="bg-grad h-full rounded-full" style={{ width: `${Math.min(100, x.cap ? (x.used / x.cap) * 100 : 100)}%` }} />
+              </div>
+            </div>
+          ))}
+        </div>
+        <p className="mt-2 text-xs text-muted">Cuando se terminan, el Profe sigue con las respuestas de base.</p>
+      </section>
 
       <nav aria-label="Configuración" className="divide-y divide-line overflow-hidden rounded-[20px] border border-line bg-surface">
         <MenuLink href="/perfil/ajustes/datos" label="Datos personales" hint="Usuario, altura, peso" />
