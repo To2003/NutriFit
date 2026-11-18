@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { createContext, useContext, useState, useTransition } from "react";
 import { ChevronLeft } from "lucide-react";
 import { motion } from "motion/react";
 import { toast } from "sonner";
@@ -10,7 +10,14 @@ import { Button } from "@/components/ui/button";
 import { saveOnboardingStep } from "@/app/(onboarding)/onboarding/actions";
 import { STEP_TITLES, TOTAL_STEPS, type StepNumber } from "@/lib/onboarding/schemas";
 
+/** Los pasos del onboarding se reutilizan en Perfil → Ajustes. */
+const SettingsMode = createContext(false);
+export function SettingsModeProvider({ children }: { children: React.ReactNode }) {
+  return <SettingsMode.Provider value>{children}</SettingsMode.Provider>;
+}
+
 export function useStepSubmit(step: number, nextHref?: string) {
+  const settings = useContext(SettingsMode);
   const router = useRouter();
   const [pending, start] = useTransition();
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -23,6 +30,18 @@ export function useStepSubmit(step: number, nextHref?: string) {
         return;
       }
       setErrors({});
+      if (settings) {
+        if (r.suggestRoutine) {
+          toast.success("Guardado", {
+            description: "Cambió tu semana: ¿rehacemos la rutina?",
+            action: { label: "Rehacer", onClick: () => router.push("/entreno") },
+            duration: 8000,
+          });
+        } else toast.success("Guardado");
+        router.push("/perfil");
+        router.refresh();
+        return;
+      }
       router.push(nextHref ?? (step >= TOTAL_STEPS ? "/onboarding/objetivos" : `/onboarding/${step + 1}`));
     });
   return { pending, errors, submit };
@@ -47,12 +66,13 @@ export function StepShell({
   canSkip?: boolean;
   onSkip?: () => void;
 }) {
+  const settings = useContext(SettingsMode);
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-lg flex-col px-5 pt-[max(16px,env(safe-area-inset-top))]">
       <div className="flex items-center gap-2 py-2">
-        {step > 1 ? (
+        {settings || step > 1 ? (
           <Link
-            href={`/onboarding/${step - 1}`}
+            href={settings ? "/perfil" : `/onboarding/${step - 1}`}
             aria-label="Volver al paso anterior"
             className="-ml-2 grid size-10 place-items-center rounded-full text-muted hover:bg-surface-2"
           >
@@ -61,12 +81,18 @@ export function StepShell({
         ) : (
           <span className="size-10" />
         )}
-        <div className="flex-1">
-          <ProgressSteps step={step} total={TOTAL_STEPS} />
-        </div>
-        <span className="tnum w-10 text-right text-sm text-muted">
-          {step}/{TOTAL_STEPS}
-        </span>
+        {settings ? (
+          <span className="flex-1" />
+        ) : (
+          <>
+            <div className="flex-1">
+              <ProgressSteps step={step} total={TOTAL_STEPS} />
+            </div>
+            <span className="tnum w-10 text-right text-sm text-muted">
+              {step}/{TOTAL_STEPS}
+            </span>
+          </>
+        )}
       </div>
       <motion.div
         key={step}
@@ -89,7 +115,7 @@ export function StepShell({
           <div className="flex-1 space-y-5 pb-6">{children}</div>
           <div className="sticky bottom-0 -mx-5 flex flex-col gap-2 bg-gradient-to-t from-bg via-bg to-transparent px-5 pt-6 pb-[max(20px,env(safe-area-inset-bottom))]">
             <Button type="submit" size="lg" block disabled={pending}>
-              {pending ? "Guardando…" : nextLabel}
+              {pending ? "Guardando…" : settings ? "Guardar" : nextLabel}
             </Button>
             {canSkip ? (
               <Button type="button" variant="ghost" size="sm" onClick={onSkip} disabled={pending}>

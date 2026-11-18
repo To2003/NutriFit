@@ -8,7 +8,7 @@ import { STEP_SCHEMAS, TOTAL_STEPS, fieldErrors, firstIssue, type StepNumber } f
 import { buildTargetInputs, computeWeek, weekToStored, type StoredTargets } from "@/lib/data/targets";
 import type { Json } from "@/lib/supabase/database.types";
 
-export type ActionResult = { ok: true } | { ok: false; error: string; fields?: Record<string, string> };
+export type ActionResult = { ok: true; suggestRoutine?: boolean } | { ok: false; error: string; fields?: Record<string, string> };
 
 export async function saveOnboardingStep(step: number, payload: unknown): Promise<ActionResult> {
   const userId = await getUserId();
@@ -111,7 +111,21 @@ export async function saveOnboardingStep(step: number, payload: unknown): Promis
   }
 
   // Avanza el paso guardado (nunca retrocede)
-  const cur = await supabase.from("profile_details").select("onboarding_step").eq("user_id", userId).single();
+  const cur = await supabase.from("profile_details").select("onboarding_step, onboarded_at").eq("user_id", userId).single();
+  if (cur.data?.onboarded_at) {
+    // Desde ajustes: recalcular objetivos si cambió algo que los afecta (salvo objetivos fijados a mano)
+    let suggestRoutine = false;
+    if ([1, 2, 3, 5, 6].includes(step)) {
+      const g = await supabase.from("user_goals").select("manual_override").eq("user_id", userId).order("created_at", { ascending: false }).limit(1).maybeSingle();
+      if (!g.data?.manual_override) await saveGoals(null);
+    }
+    if ([5, 6, 7].includes(step)) {
+      const prog = await supabase.from("programs").select("id").eq("user_id", userId).eq("status", "active").limit(1).maybeSingle();
+      suggestRoutine = Boolean(prog.data);
+    }
+    revalidatePath("/", "layout");
+    return { ok: true, suggestRoutine };
+  }
   const next = Math.min(step + 1, TOTAL_STEPS + 1);
   if ((cur.data?.onboarding_step ?? 1) < next) {
     await supabase.from("profile_details").update({ onboarding_step: next }).eq("user_id", userId);

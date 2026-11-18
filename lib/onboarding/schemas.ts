@@ -3,6 +3,7 @@ import { ageFromBirthdate } from "@/lib/calc/bmr";
 import { SPORTS } from "@/lib/calc/types";
 
 export const TOTAL_STEPS = 10;
+export const RESERVED_USERNAMES = ["ajustes", "progreso", "logros", "buscar", "solicitudes", "seguidores", "siguiendo", "admin", "nutrifit", "profe"];
 export const MIN_AGE = 18;
 
 const time = z
@@ -17,7 +18,8 @@ export const basicsSchema = z.object({
     .string()
     .trim()
     .toLowerCase()
-    .regex(/^[a-z0-9_.]{3,24}$/, "Entre 3 y 24: letras, números, punto o guion bajo"),
+    .regex(/^[a-z0-9_.]{3,24}$/, "Entre 3 y 24: letras, números, punto o guion bajo")
+    .refine((u) => !RESERVED_USERNAMES.includes(u), "Ese usuario está reservado"),
   birthdate: z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, "Fecha inválida")
