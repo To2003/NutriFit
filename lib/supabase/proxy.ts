@@ -17,6 +17,9 @@ export async function updateSession(request: NextRequest) {
   const path = request.nextUrl.pathname;
   const isPublic = PUBLIC_PATHS.some((p) => path === p || path.startsWith(`${p}/`));
 
+  // Modo demo: sin Supabase, siempre "logueado" como Toto
+  if (process.env.NEXT_PUBLIC_DEMO === "1") return response;
+
   if (!isSupabaseConfigured()) {
     // Sin Supabase configurado mostramos la pantalla de login con el aviso correspondiente.
     if (!isPublic) return NextResponse.redirect(new URL("/login", request.url));

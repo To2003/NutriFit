@@ -13,6 +13,10 @@ export function GoogleButton({ next }: { next?: string }) {
         block
         disabled={loading}
         onClick={async () => {
+          if (process.env.NEXT_PUBLIC_DEMO === "1") {
+            window.location.href = "/inicio";
+            return;
+          }
           setLoading(true);
           setError(null);
           const supabase = createClient();

@@ -41,6 +41,12 @@ Spec: [`SPEC.md`](SPEC.md) · Guía para desarrollar: [`CLAUDE.md`](CLAUDE.md)
 2. Cargá las variables de `.env.example`.
 3. Deploy. Después completá Vault (paso 1.4) con la URL final.
 
+### Modo demo (sin Supabase)
+```bash
+pnpm demo   # http://localhost:3000 — entrás como "Toto" con una semana de datos de ejemplo
+```
+Todo corre en memoria (se borra al reiniciar), sin IA (usa los fallbacks) y sin RLS. Sirve para ver y probar las pantallas antes de tener Supabase. Capturas en `docs/capturas/`.
+
 ### Desarrollo local
 ```bash
 cp .env.example .env.local   # completar

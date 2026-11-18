@@ -6,7 +6,7 @@ export const publicEnv = {
 };
 
 export function isSupabaseConfigured(): boolean {
-  return Boolean(publicEnv.supabaseUrl && publicEnv.supabaseAnonKey);
+  return process.env.NEXT_PUBLIC_DEMO === "1" || Boolean(publicEnv.supabaseUrl && publicEnv.supabaseAnonKey);
 }
 
 /** Variables sólo de servidor. Nunca importar desde un componente cliente. */

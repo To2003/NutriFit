@@ -43,9 +43,11 @@ export function toFoodRow(f: DbFood): FoodRow {
 export async function searchLocal(supabase: ServerClient, q: string, limit = 20): Promise<FoodRow[]> {
   const toks = tokens(q).slice(0, 4);
   if (toks.length === 0) return [];
-  // prefiltro amplio por el token más largo; el ranking fino lo hace matchScore
-  const key = [...toks].sort((a, b) => b.length - a.length)[0];
-  const { data } = await supabase.from("foods").select("*").ilike("search_name", `%${key.slice(0, Math.max(3, key.length - 1))}%`).limit(80);
+  // prefiltro amplio: cualquier alimento que contenga alguna palabra (o alias); el ranking fino lo hace matchScore
+  const keys = [...new Set(toks.map((k) => k.slice(0, Math.max(3, k.length - 1))))].slice(0, 3);
+  const results = await Promise.all(keys.map((k) => supabase.from("foods").select("*").or(`search_name.ilike.%${k}%,aliases.cs.{${k}}`).limit(60)));
+  const seen = new Set<string>();
+  const data = results.flatMap((r) => r.data ?? []).filter((f) => (seen.has(f.id) ? false : (seen.add(f.id), true)));
   const rows = (data ?? []).map(toFoodRow);
   const nq = normalize(q);
   return rows
