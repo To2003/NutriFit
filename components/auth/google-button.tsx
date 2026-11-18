@@ -1,9 +1,11 @@
 "use client";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 
 export function GoogleButton({ next }: { next?: string }) {
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   return (
@@ -14,7 +16,7 @@ export function GoogleButton({ next }: { next?: string }) {
         disabled={loading}
         onClick={async () => {
           if (process.env.NEXT_PUBLIC_DEMO === "1") {
-            window.location.href = "/inicio";
+            router.push("/inicio");
             return;
           }
           setLoading(true);
