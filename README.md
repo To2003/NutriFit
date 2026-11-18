@@ -9,7 +9,7 @@ Spec: [`SPEC.md`](SPEC.md) · Guía para desarrollar: [`CLAUDE.md`](CLAUDE.md)
 
 ### 1. Supabase
 1. Creá un proyecto en el plan gratis.
-2. Generá el SQL: `pnpm install && pnpm db:bundle`.
+2. El SQL ya está generado en el repo: `supabase/dist/migrations.sql` y `supabase/dist/seed.sql` (si cambian las migraciones: `pnpm db:bundle`).
 3. En **SQL Editor**, pegá y corré, en este orden:
    1. `supabase/dist/migrations.sql` (todas las migraciones);
    2. `supabase/dist/seed.sql` (ejercicios, alimentos argentinos y logros).
@@ -20,7 +20,7 @@ Spec: [`SPEC.md`](SPEC.md) · Guía para desarrollar: [`CLAUDE.md`](CLAUDE.md)
    select vault.create_secret('https://TU-APP.vercel.app', 'app_url');
    select vault.create_secret('EL_MISMO_CRON_SECRET_DE_VERCEL', 'cron_secret');
    ```
-   Después volvé a correr la última parte de `migrations.sql` (`0008_cron.sql`) para programar los crons.
+   No hace falta volver a correr nada: los crons leen estos secretos en cada llamada.
 
 ### 2. Google OAuth
 1. Google Cloud Console → Credenciales → **ID de cliente OAuth (Web)**.

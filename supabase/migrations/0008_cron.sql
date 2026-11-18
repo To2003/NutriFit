@@ -1,7 +1,8 @@
 -- @pglite-skip (usa pg_cron, pg_net y vault de Supabase)
 -- NutriFit · 0008 · Crons: cada 15 min llama a /api/cron/* de la app con CRON_SECRET.
 --
--- ANTES de correr este archivo, cargá dos secretos en Vault (una sola vez), en el SQL Editor:
+-- Los secretos se leen en cada llamada: se pueden cargar antes o después de correr esto.
+-- Cargalos en Vault (una sola vez), en el SQL Editor:
 --   select vault.create_secret('https://TU-APP.vercel.app', 'app_url');
 --   select vault.create_secret('EL_MISMO_VALOR_QUE_CRON_SECRET', 'cron_secret');
 -- Para cambiarlos después: select vault.update_secret(id, 'nuevo') usando el id de vault.secrets.
