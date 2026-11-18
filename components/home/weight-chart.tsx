@@ -41,21 +41,15 @@ export function WeightChart({ weights, today }: { weights: { date: string; kg: n
 
   return (
     <div>
-      <div className="mb-3 flex items-end justify-between gap-3">
-        <div>
-          <p className="score text-4xl">
+      <div className="mb-2 flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="score text-4xl whitespace-nowrap">
             {last ? fmt1(last.trend) : "—"}
-            <span className="font-sans text-base font-normal text-muted"> kg tendencia</span>
+            <span className="font-sans text-sm font-normal text-muted"> kg</span>
           </p>
-          {data.projection.length ? (
-            <p className="text-xs text-muted">
-              {Math.abs(data.weekly) < 0.05
-                ? "Estable las últimas 2 semanas."
-                : `${data.weekly < 0 ? "Bajando" : "Subiendo"} ${fmt1(Math.abs(data.weekly))} kg/semana. En 4 semanas: ~${fmt1(data.projection[4].proj)} kg.`}
-            </p>
-          ) : null}
+          <p className="text-xs text-muted">de tendencia</p>
         </div>
-        <div className="w-36">
+        <div className="w-[132px] shrink-0">
           <Segmented
             label="Rango"
             value={range}
@@ -68,9 +62,16 @@ export function WeightChart({ weights, today }: { weights: { date: string; kg: n
           />
         </div>
       </div>
+      {data.projection.length ? (
+        <p className="mb-2 text-sm text-muted">
+          {Math.abs(data.weekly) < 0.05
+            ? "Estable las últimas 2 semanas."
+            : `${data.weekly < 0 ? "Bajando" : "Subiendo"} ${fmt1(Math.abs(data.weekly))} kg por semana. Si seguís así, en 4 semanas: ~${fmt1(data.projection[4].proj)} kg.`}
+        </p>
+      ) : null}
       <div className="h-44" role="img" aria-label="Gráfico de peso con tendencia">
         <ResponsiveContainer width="100%" height="100%">
-          <ComposedChart data={merged} margin={{ top: 6, right: 4, left: -18, bottom: 0 }}>
+          <ComposedChart data={merged} margin={{ top: 6, right: 6, left: -6, bottom: 0 }}>
             <defs>
               <linearGradient id="trendFill" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor="var(--accent)" stopOpacity={0.18} />

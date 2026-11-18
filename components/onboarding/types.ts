@@ -48,6 +48,13 @@ export interface OnboardingInitial {
     daily_close_on: boolean;
     daily_close_at: string;
     weekly_review: boolean;
+    lunch_by: string;
+    dinner_by: string;
+    gym_at: string;
+    quiet_from: string;
+    quiet_to: string;
+    follow_requests: boolean;
+    measure_reminders: boolean;
   };
   privacy: {
     is_private: boolean;

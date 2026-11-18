@@ -59,8 +59,23 @@ export function StepNotifications({ initial }: { initial: OnboardingInitial["not
             ]}
           />
         ) : null}
-        <Toggle checked={v.meals_on} onChange={(c) => set("meals_on", c)} label="Comidas" description="Si a las 14:30 no cargaste el almuerzo (o a las 22 la cena)." />
+        <Toggle checked={v.meals_on} onChange={(c) => set("meals_on", c)} label="Comidas" description={`Si a las ${v.lunch_by} no cargaste el almuerzo (o a las ${v.dinner_by} la cena).`} />
+        {v.meals_on ? (
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Almuerzo, a las">
+              <Input type="time" value={v.lunch_by} onChange={(e) => set("lunch_by", e.target.value)} />
+            </Field>
+            <Field label="Cena, a las">
+              <Input type="time" value={v.dinner_by} onChange={(e) => set("dinner_by", e.target.value)} />
+            </Field>
+          </div>
+        ) : null}
         <Toggle checked={v.gym_on} onChange={(c) => set("gym_on", c)} label="Gym" description="El día que te toca, a tu hora." />
+        {v.gym_on ? (
+          <Field label="Aviso de gym a las">
+            <Input type="time" value={v.gym_at} onChange={(e) => set("gym_at", e.target.value)} />
+          </Field>
+        ) : null}
         <Toggle checked={v.daily_close_on} onChange={(c) => set("daily_close_on", c)} label="Cierre del día" description="El Profe te hace el balance del día." />
         {v.daily_close_on ? (
           <Field label="¿A qué hora?">
@@ -68,6 +83,16 @@ export function StepNotifications({ initial }: { initial: OnboardingInitial["not
           </Field>
         ) : null}
         <Toggle checked={v.weekly_review} onChange={(c) => set("weekly_review", c)} label="Revisión semanal" description="Domingo a la noche: tendencia, objetivos y ajustes." />
+        <Toggle checked={v.follow_requests} onChange={(c) => set("follow_requests", c)} label="Solicitudes de seguimiento" />
+        <Toggle checked={v.measure_reminders} onChange={(c) => set("measure_reminders", c)} label="Toca medirte / toca test" description="Medidas cada 2 semanas, tests cada 4." />
+        <div className="grid grid-cols-2 gap-3 pt-2">
+          <Field label="Silencio desde">
+            <Input type="time" value={v.quiet_from} onChange={(e) => set("quiet_from", e.target.value)} />
+          </Field>
+          <Field label="hasta">
+            <Input type="time" value={v.quiet_to} onChange={(e) => set("quiet_to", e.target.value)} />
+          </Field>
+        </div>
       </div>
     </StepShell>
   );

@@ -85,10 +85,14 @@ export async function saveOnboardingStep(step: number, payload: unknown): Promis
           user_id: userId,
           enabled: d.enabled,
           water: { on: d.water_on, every_h: d.water_every_h, from: "09:00", to: "21:00" },
-          meals: { on: d.meals_on, lunch_by: "14:30", dinner_by: "22:00" },
-          gym: { on: d.gym_on, at: "18:00" },
+          meals: { on: d.meals_on, lunch_by: d.lunch_by, dinner_by: d.dinner_by },
+          gym: { on: d.gym_on, at: d.gym_at },
           daily_close: { on: d.daily_close_on, at: d.daily_close_at },
           weekly_review: d.weekly_review,
+          follow_requests: d.follow_requests,
+          measure_reminders: d.measure_reminders,
+          quiet_from: d.quiet_from,
+          quiet_to: d.quiet_to,
         });
       if (r.error) return fail("No pudimos guardar los recordatorios");
       break;

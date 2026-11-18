@@ -64,6 +64,13 @@ export function onboardingInitial(me: Me): OnboardingInitial {
       daily_close_on: (close.on as boolean) ?? true,
       daily_close_at: (close.at as string) ?? "22:00",
       weekly_review: n?.weekly_review ?? true,
+      lunch_by: (meals.lunch_by as string) ?? "14:30",
+      dinner_by: (meals.dinner_by as string) ?? "22:00",
+      gym_at: (gym.at as string) ?? me.gym?.preferred_time?.slice(0, 5) ?? "18:00",
+      quiet_from: n?.quiet_from?.slice(0, 5) ?? "23:30",
+      quiet_to: n?.quiet_to?.slice(0, 5) ?? "08:00",
+      follow_requests: n?.follow_requests ?? true,
+      measure_reminders: n?.measure_reminders ?? true,
     },
     privacy: {
       is_private: me.profile.is_private,

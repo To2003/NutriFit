@@ -95,6 +95,13 @@ export const notificationsSchema = z.object({
   daily_close_on: z.boolean(),
   daily_close_at: time,
   weekly_review: z.boolean(),
+  lunch_by: time.default("14:30"),
+  dinner_by: time.default("22:00"),
+  gym_at: time.default("18:00"),
+  quiet_from: time.default("23:30"),
+  quiet_to: time.default("08:00"),
+  follow_requests: z.boolean().default(true),
+  measure_reminders: z.boolean().default(true),
 });
 
 export const privacySchema = z.object({

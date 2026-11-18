@@ -170,7 +170,7 @@ export function GymMode({ programSessionId, title, exercises }: { programSession
         </Button>
       </header>
 
-      <div className="space-y-2.5 px-3 pt-3">
+      <div className="space-y-2.5 px-2 pt-3">
         {exercises.map((ex) => {
           const st = sets[ex.exerciseId];
           const done = st.every((s) => s.done);
@@ -178,7 +178,7 @@ export function GymMode({ programSessionId, title, exercises }: { programSession
           const bw = ex.loadType === "bodyweight" || ex.loadType === "band";
           return (
             <section key={ex.exerciseId} className={cn("rounded-[20px] border bg-surface", expanded ? "border-accent/50" : "border-line", done && "opacity-70")}>
-              <button type="button" onClick={() => setOpen(expanded ? null : ex.exerciseId)} className="flex w-full items-center gap-3 p-4 text-left" aria-expanded={expanded}>
+              <button type="button" onClick={() => setOpen(expanded ? null : ex.exerciseId)} className="flex w-full items-center gap-3 p-3.5 text-left" aria-expanded={expanded}>
                 <span className={cn("grid size-8 shrink-0 place-items-center rounded-full border text-sm font-bold", done ? "border-accent bg-accent text-accent-ink" : "border-line")}>
                   {done ? <Check className="size-4" /> : st.filter((s) => s.done).length}
                 </span>
@@ -195,7 +195,7 @@ export function GymMode({ programSessionId, title, exercises }: { programSession
               <AnimatePresence initial={false}>
                 {expanded ? (
                   <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
-                    <div className="space-y-3 px-4 pb-4">
+                    <div className="space-y-3 px-3 pb-4">
                       {ex.previous.length ? (
                         <p className="tnum text-sm text-muted">
                           La vez anterior: {ex.previous.map((p) => (bw ? `${p.reps}` : `${fmt1(p.kg)}×${p.reps}`)).join(" · ")}
@@ -205,8 +205,8 @@ export function GymMode({ programSessionId, title, exercises }: { programSession
                       {ex.notes ? <p className="text-sm text-muted">{ex.notes}</p> : null}
                       <div className="space-y-2">
                         {st.map((s, i) => (
-                          <div key={i} className={cn("flex items-center gap-2 rounded-[14px] border p-2", s.done ? "border-accent/40 bg-accent/6" : "border-line bg-surface-2")}>
-                            <span className="w-5 text-center text-sm font-semibold text-muted">{i + 1}</span>
+                          <div key={i} className={cn("flex items-center gap-1 rounded-[14px] border p-1.5", s.done ? "border-accent/40 bg-accent/6" : "border-line bg-surface-2")}>
+                            <span className="w-4 text-center text-sm font-semibold text-muted">{i + 1}</span>
                             {!bw ? (
                               <NumField label="kg" value={s.kg} step={ex.loadType === "dumbbell" ? 2 : 2.5} onChange={(v) => update(ex.exerciseId, i, { kg: v })} disabled={s.done} />
                             ) : null}
@@ -216,7 +216,7 @@ export function GymMode({ programSessionId, title, exercises }: { programSession
                               value={s.rir ?? ""}
                               disabled={s.done}
                               onChange={(e) => update(ex.exerciseId, i, { rir: e.target.value === "" ? null : Number(e.target.value) })}
-                              className="h-11 w-14 rounded-[10px] border border-line bg-surface px-1 text-center text-sm"
+                              className="h-11 w-11 shrink-0 appearance-none rounded-[10px] border border-line bg-surface text-center text-sm"
                             >
                               <option value="">RIR</option>
                               {[0, 1, 2, 3, 4, 5].map((n) => (
@@ -229,14 +229,14 @@ export function GymMode({ programSessionId, title, exercises }: { programSession
                               type="button"
                               aria-label={s.done ? `Desmarcar serie ${i + 1}` : `Marcar serie ${i + 1} hecha`}
                               onClick={() => complete(ex, i)}
-                              className={cn("ml-auto grid size-11 place-items-center rounded-[12px] transition-colors", s.done ? "bg-accent text-accent-ink" : "border border-line text-muted")}
+                              className={cn("ml-auto grid size-11 shrink-0 place-items-center rounded-[12px] transition-colors", s.done ? "bg-accent text-accent-ink" : "border border-line text-muted")}
                             >
                               <Check className="size-5" />
                             </button>
                           </div>
                         ))}
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex flex-wrap gap-2">
                         <button
                           type="button"
                           onClick={() => setSets((x) => ({ ...x, [ex.exerciseId]: [...x[ex.exerciseId], { ...x[ex.exerciseId][x[ex.exerciseId].length - 1], done: false }] }))}
@@ -244,7 +244,7 @@ export function GymMode({ programSessionId, title, exercises }: { programSession
                         >
                           <Plus className="size-4" /> Serie
                         </button>
-                        <details className="flex-1 rounded-[10px] border border-line px-3 py-2 text-sm">
+                        <details className="order-last w-full rounded-[10px] border border-line px-3 py-2 text-sm">
                           <summary className="flex cursor-pointer list-none items-center gap-1 text-muted">
                             <Info className="size-4" /> Cómo se hace
                           </summary>
@@ -331,8 +331,8 @@ function Stat({ label, value }: { label: string; value: string }) {
 
 function NumField({ label, value, step, onChange, disabled }: { label: string; value: number; step: number; onChange: (v: number) => void; disabled?: boolean }) {
   return (
-    <div className="flex items-center rounded-[10px] border border-line bg-surface">
-      <button type="button" disabled={disabled} aria-label={`Restar ${label}`} onClick={() => onChange(Math.max(0, Math.round((value - step) * 100) / 100))} className="h-11 w-8 text-lg text-muted disabled:opacity-30">
+    <div className="flex shrink-0 items-center rounded-[10px] border border-line bg-surface">
+      <button type="button" disabled={disabled} aria-label={`Restar ${label}`} onClick={() => onChange(Math.max(0, Math.round((value - step) * 100) / 100))} className="h-11 w-7 text-lg text-muted disabled:opacity-30">
         −
       </button>
       <label className="flex flex-col items-center">
@@ -342,11 +342,11 @@ function NumField({ label, value, step, onChange, disabled }: { label: string; v
           value={value}
           disabled={disabled}
           onChange={(e) => onChange(Math.max(0, Number(e.target.value) || 0))}
-          className="score w-12 bg-transparent text-center text-xl outline-none"
+          className="score w-10 bg-transparent text-center text-xl outline-none"
         />
         <span className="-mt-0.5 text-[10px] text-muted">{label}</span>
       </label>
-      <button type="button" disabled={disabled} aria-label={`Sumar ${label}`} onClick={() => onChange(Math.round((value + step) * 100) / 100)} className="h-11 w-8 text-lg text-muted disabled:opacity-30">
+      <button type="button" disabled={disabled} aria-label={`Sumar ${label}`} onClick={() => onChange(Math.round((value + step) * 100) / 100)} className="h-11 w-7 text-lg text-muted disabled:opacity-30">
         +
       </button>
     </div>

@@ -31,6 +31,9 @@ export function explainTargets(args: {
       `Los días de partido comés ${fmt(args.byTypeKcal.match - args.byTypeKcal.rest)} kcal más que los de descanso, casi todo en carbohidratos: es la nafta para jugar.`,
     );
   }
+  else if (args.byTypeKcal.match && args.byTypeKcal.training && args.byTypeKcal.match > args.byTypeKcal.training) {
+    out.push(`Los días de partido comés ${fmt(args.byTypeKcal.match - args.byTypeKcal.training)} kcal más que los de entreno, casi todo en carbohidratos.`);
+  }
   if (args.notes.includes("kcal_floor")) {
     out.push("Algún día el cálculo daba muy bajo, así que lo subimos al piso: nunca te vamos a pedir comer menos que eso.");
   }

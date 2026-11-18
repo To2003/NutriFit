@@ -2,7 +2,15 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { isSupabaseConfigured, publicEnv } from "@/lib/env";
 
-const PUBLIC_PATHS = ["/login", "/auth", "/offline", "/legal", "/api/cron", "/manifest.webmanifest", "/sw.js"];
+const PUBLIC_PATHS = [
+  "/login",
+  "/auth",
+  "/offline",
+  "/api/cron",
+  "/manifest.webmanifest",
+  "/sw.js",
+  ...(process.env.NODE_ENV === "production" ? [] : ["/dev"]),
+];
 
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });

@@ -51,6 +51,15 @@ describe("generateRulePlan", () => {
     for (const s of plan.sessions) expect(s.exercises.length).toBeGreaterThanOrEqual(4);
   });
 
+  it("los días livianos (MD±1) quedan lejos del fallo: ≤ 2 series y RIR ≥ 3", () => {
+    const plan = generateRulePlan(toto, EXERCISE_LIBRARY);
+    for (const s of plan.sessions.filter((x) => x.weekday !== 3))
+      for (const e of s.exercises) {
+        expect(e.sets).toBeLessThanOrEqual(2);
+        if (e.rir != null) expect(e.rir).toBeGreaterThanOrEqual(3);
+      }
+  });
+
   it("vóley suma prevención de hombro/rodilla y hockey de isquios/aductores", () => {
     const plan = generateRulePlan(toto, EXERCISE_LIBRARY);
     const ids = plan.sessions.flatMap((s) => s.exercises.map((e) => e.exerciseId));

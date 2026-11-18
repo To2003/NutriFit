@@ -79,17 +79,14 @@ export function MacroBar({
 }) {
   const pct = target > 0 ? Math.min(value / target, 1) : 0;
   return (
-    <div>
-      <div className="mb-1 flex items-baseline justify-between text-sm">
-        <span className="text-muted">{label}</span>
-        <span className="tnum">
-          <span className="font-semibold text-text">{fmt(value)}</span>
-          <span className="text-muted">
-            {" "}
-            / {fmt(target)} {unit}
-          </span>
+    <div className="min-w-0">
+      <p className="text-xs text-muted">{label}</p>
+      <p className="tnum mb-1 truncate text-sm">
+        <span className="font-semibold text-text">{fmt(value)}</span>
+        <span className="text-muted">
+          /{fmt(target)} {unit}
         </span>
-      </div>
+      </p>
       <div className="h-2 overflow-hidden rounded-full bg-surface-2">
         <motion.div
           className="h-full rounded-full"

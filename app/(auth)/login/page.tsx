@@ -1,6 +1,6 @@
 import { isSupabaseConfigured } from "@/lib/env";
 import { GoogleButton } from "@/components/auth/google-button";
-import { ProfeMark } from "@/components/ui/profe";
+import { AppMark } from "@/components/ui/profe";
 
 export const metadata = { title: "Entrar" };
 
@@ -11,15 +11,16 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
   return (
     <main className="relative mx-auto flex min-h-dvh max-w-lg flex-col overflow-hidden px-6 pt-[max(24px,env(safe-area-inset-top))] pb-[max(24px,env(safe-area-inset-bottom))]">
       {/* Marcas de cancha */}
-      <svg aria-hidden className="pointer-events-none absolute inset-x-0 top-24 mx-auto h-[420px] w-[520px] text-line" viewBox="0 0 520 420" fill="none">
-        <rect x="20" y="10" width="480" height="400" rx="6" stroke="currentColor" strokeWidth="2" />
-        <line x1="20" y1="210" x2="500" y2="210" stroke="currentColor" strokeWidth="2" />
-        <line x1="20" y1="140" x2="500" y2="140" stroke="currentColor" strokeWidth="1" strokeDasharray="6 8" />
-        <line x1="20" y1="280" x2="500" y2="280" stroke="currentColor" strokeWidth="1" strokeDasharray="6 8" />
+      {/* Cancha de vóley vista desde arriba: red al medio, líneas de ataque punteadas */}
+      <svg aria-hidden className="pointer-events-none absolute top-24 left-6 h-[46dvh] w-[calc(100%-3rem)] text-line" viewBox="0 0 300 420" preserveAspectRatio="none" fill="none">
+        <rect x="1" y="1" width="298" height="418" rx="4" stroke="currentColor" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
+        <line x1="0" y1="210" x2="300" y2="210" stroke="currentColor" strokeWidth="2.5" vectorEffect="non-scaling-stroke" />
+        <line x1="0" y1="140" x2="300" y2="140" stroke="currentColor" strokeWidth="1" strokeDasharray="5 7" vectorEffect="non-scaling-stroke" />
+        <line x1="0" y1="280" x2="300" y2="280" stroke="currentColor" strokeWidth="1" strokeDasharray="5 7" vectorEffect="non-scaling-stroke" />
       </svg>
 
       <div className="relative flex items-center gap-2.5">
-        <ProfeMark size={34} />
+        <AppMark size={34} />
         <span className="score text-2xl">NutriFit</span>
       </div>
 

@@ -241,7 +241,14 @@ export function generateRulePlan(input: GeneratorInput, lib: ExerciseInfo[]): We
       const pick = scored[0].e;
       usedHere.add(pick.id);
       usedInWeek.set(pick.id, (usedInWeek.get(pick.id) ?? 0) + 1);
-      chosen.push({ exerciseId: pick.id, ...prescription(slot.role, input) });
+      const rx = prescription(slot.role, input);
+      if (kind === "light") {
+        // MD-1 / MD+1: tren superior liviano, lejos del fallo
+        rx.sets = Math.min(rx.sets, 2);
+        rx.rir = rx.rir == null ? null : Math.max(rx.rir, 3);
+        if (slot.role === "secondary") rx.notes = "Liviano: pegado a un partido, que quede con resto.";
+      }
+      chosen.push({ exerciseId: pick.id, ...rx });
     }
     if (chosen.some((c) => lib.find((e) => e.id === c.exerciseId)?.pattern === "plyometric")) plyoSessions++;
     return { weekday, name: SESSION_NAMES[kind], exercises: chosen };

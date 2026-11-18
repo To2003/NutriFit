@@ -10,10 +10,10 @@ PWA mobile-first de diario nutricional + rutinas de gimnasio con un agente IA ("
 ## Stack
 | Capa | Elección |
 |---|---|
-| Front + API | Next.js (App Router) + TypeScript estricto, Server Actions / Route Handlers |
+| Front + API | Next.js 16 (App Router, Turbopack, `proxy.ts` en vez de middleware) + TypeScript estricto. `cacheComponents` desactivado: la app es 100 % por usuario. |
 | UI | Tailwind CSS v4 + shadcn/ui, Motion (ex framer-motion) para animación |
 | Gráficos | Recharts |
-| PWA | Manifest + Serwist (service worker, push) |
+| PWA | Manifest (`app/manifest.ts`) + service worker propio (`public/sw.js`: offline + push). Sin Serwist: Next 16 usa Turbopack y Serwist necesita webpack. |
 | DB/Auth/Storage | Supabase (Postgres + RLS, Google OAuth, bucket privado `food-photos`) |
 | IA | Gemini (`@google/genai`), detrás de `lib/ai/provider.ts` |
 | Validación | zod |
@@ -25,14 +25,17 @@ PWA mobile-first de diario nutricional + rutinas de gimnasio con un agente IA ("
 | Package manager | pnpm |
 
 ## Comandos
-> Se completan al terminar el scaffolding (H0).
 ```
-pnpm dev          # dev server
+pnpm dev          # dev server (http://localhost:3000). /dev/preview muestra componentes con datos de ejemplo (solo dev)
 pnpm build        # build de producción
-pnpm test         # vitest (calc, training, RLS)
-pnpm lint
-pnpm db:bundle    # concatena supabase/migrations/*.sql → supabase/dist/all.sql (para pegar en el SQL Editor)
+pnpm test         # vitest: lib/calc, lib/training, lib/agent, lib/food, lib/push + RLS (PGlite)
+pnpm lint         # eslint
+pnpm typecheck    # tsc --noEmit
+pnpm db:bundle    # migraciones → supabase/dist/migrations.sql y seeds → supabase/dist/seed.sql (para el SQL Editor)
+pnpm db:types     # regenera lib/supabase/database.types.ts desde las migraciones (PGlite)
+pnpm db:seeds     # regenera supabase/seed/*.sql desde lib/training/library-data.ts, lib/food/foods-ar-data.ts y logros
 ```
+> Después de tocar una migración: `pnpm db:types && pnpm test`. Después de tocar datos de ejercicios/alimentos: `pnpm db:seeds`.
 
 ## Flujo con Supabase (acordado)
 - **No hay conexión desde la sesión de desarrollo al proyecto Supabase.** El proyecto todavía no existe.
@@ -88,13 +91,32 @@ tests/rls/
 ## Estado de hitos
 | Hito | Estado | Notas |
 |---|---|---|
-| H0 – Base | ⏳ planificado | Esperando el OK del plan |
-| H1 – Diario | — | |
-| H2 – Entreno | — | Tiene que estar usable el 29/11 |
-| H3 – Agente | — | |
-| H4 – Push + social | — | |
-| H5 – Cierre | — | 17/12 |
+| H0 – Base | ✅ código listo | Login Google, onboarding 10 pasos, "Tus objetivos", motor de cálculo con tests, PWA. Falta: crear proyecto Supabase + OAuth y probar en el celu. |
+| H1 – Diario | ✅ código listo | Comida (texto/foto/buscador + confirmación), agua, peso, actividad desde agenda, Home v1. OFF/USDA no se pudieron probar desde el entorno de desarrollo (red bloqueada). |
+| H2 – Entreno | ✅ código listo | Biblioteca 134 ejercicios, generador IA + reglas + fallback, modo gym, progresión, molestias. |
+| H3 – Agente | ✅ código listo | Feedback por carga, cierre del día, ¿Qué como?, guardrails y fallbacks testeados. Gemini sin probar en vivo (red bloqueada en el entorno). |
+| H4 – Push + social | ✅ código listo | Push VAPID + crons, perfiles, privacidad por sección en RLS (tests), seguir/bloquear/copiar rutina, rachas y logros. |
+| H5 – Cierre | ✅ código listo | Revisión semanal + TDEE adaptativo + objetivos semanales, medidas, tests físicos. Pendiente: pruebas reales, pulido con uso. |
+
+**Siguiente:** desplegar (ver README) y probar con datos reales. Revisar valores de `foods_ar` (verified=false) y MET.
 
 ## Decisiones menores (bitácora)
-- pnpm como package manager.
-- Tests de RLS con PGlite: no hace falta Docker ni un proyecto remoto.
+- pnpm como package manager. DB y código en inglés (snake_case en SQL); UI y copy en español.
+- Tests de RLS con PGlite: no hace falta Docker ni un proyecto remoto. Vitest aliasa `server-only` a un stub.
+- `profiles` (público) separado de `profile_details` (privado: fecha de nac., sexo, altura, objetivo). Así la RLS no expone datos del cuerpo.
+- Objetivo/ritmo/estilo/foco viven en `profile_details`; `user_goals` guarda snapshots calculados (+ override manual + offset del TDEE adaptativo).
+- Ritmos de pérdida: punto medio de cada rango (0,375 / 0,625 / 0,875 % del peso por semana).
+- Recomposición = déficit 10 %; ganar músculo = superávit 10 % con tope de 350 kcal.
+- Caminata sola no convierte el día en "entreno".
+- Tablas hijas (`food_log_items`, `program_sessions`, `program_exercises`, `set_logs`) llevan `user_id` + FK compuesta (parent_id, user_id): RLS simple y no se puede colgar nada en datos de otro.
+- `follows.status` lo decide un trigger según la privacidad del seguido (el cliente no puede autoaceptarse). Bloquear borra follows.
+- La IA de rutinas recibe la biblioteca filtrada (equipamiento, nivel, molestias) + un plan base por reglas; elige por id. Si el plan IA no pasa el validador después de `fixPlan`, se usa el de reglas.
+- Días livianos (MD±1): ≤ 2 series y RIR ≥ 3.
+- Feedback por agua y peso: por reglas (sin IA) para no gastar cuota.
+- Tope blando de 80 llamadas IA por usuario por día (`ai_usage` + `bump_ai_usage`).
+- Guardrail: se prohíbe "ayuno/ayunar", no "en ayunas" (pesarse).
+- Ingesta baja: si ≥ 3 días completos < 80 % del piso calórico, el Profe no felicita y sugiere ver a un profesional.
+- Avatar propio: data URL de 256 px en `profiles.avatar_url` (evita un bucket público).
+- Copiar rutina: copia la semana 1 del otro perfil, la adapta a tus días de gym y agenda con `fixPlan` y genera el mesociclo.
+- Usernames reservados: ajustes, progreso, logros, buscar, solicitudes, seguidores, siguiendo, admin, nutrifit, profe.
+- Crons: notifications cada 15 min; daily en :07/:22/:37/:52; weekly cada hora domingo y lunes (la lógica usa la hora local del usuario).

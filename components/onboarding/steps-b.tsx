@@ -32,7 +32,7 @@ export function StepGym({ initial, busyDays }: { initial: OnboardingInitial["gym
   const consecutive = v.weekdays.some((d) => v.weekdays.includes(d === 7 ? 1 : d + 1));
   return (
     <StepShell step={6} subtitle="Con esto armamos tu mesociclo de 4 semanas." pending={pending} onNext={() => submit(v)}>
-      <Field label="¿Qué días podés ir?" hint="Los días con deporte también se pueden usar: lo pesado va lejos del partido.">
+      <Field label="¿Qué días podés ir?" hint="El punto naranja marca los días con deporte. También se pueden usar: lo pesado va lejos del partido.">
         <div className="grid grid-cols-7 gap-1.5">
           {[1, 2, 3, 4, 5, 6, 7].map((d) => (
             <button
