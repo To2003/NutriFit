@@ -1,7 +1,8 @@
 import { requireMe } from "@/lib/data/me";
 import { loadDay } from "@/lib/data/day";
 import { createClient } from "@/lib/supabase/server";
-import { addDays, formatDayLong, timeInTz } from "@/lib/dates";
+import { addDays, formatDayLong, isoWeekday, timeInTz, weekStart } from "@/lib/dates";
+import { DailyCloseCard, WeeklyCard } from "@/components/home/review-cards";
 import { Scoreboard } from "@/components/home/scoreboard";
 import { WaterCard } from "@/components/home/water-card";
 import { WeightChart } from "@/components/home/weight-chart";
@@ -18,7 +19,9 @@ export const metadata = { title: "Inicio" };
 export default async function InicioPage() {
   const me = await requireMe();
   const supabase = await createClient();
-  const [day, weights, lastMsg] = await Promise.all([
+  const ws = weekStart(me.today);
+  const reviewedWs = isoWeekday(me.today) === 7 ? ws : addDays(ws, -7);
+  const [day, weights, lastMsg, close, review, goals, proposal] = await Promise.all([
     loadDay(supabase, me, me.today),
     supabase
       .from("weight_logs")
@@ -33,8 +36,13 @@ export default async function InicioPage() {
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle(),
+    supabase.from("agent_messages").select("content").eq("user_id", me.userId).eq("kind", "daily_close").eq("for_date", me.today).maybeSingle(),
+    supabase.from("agent_messages").select("content, for_date").eq("user_id", me.userId).eq("kind", "weekly_review").gte("for_date", addDays(ws, -7)).order("for_date", { ascending: false }).limit(1).maybeSingle(),
+    supabase.from("weekly_goals").select("id, text, done").eq("user_id", me.userId).eq("week_start", isoWeekday(me.today) === 7 ? addDays(ws, 7) : ws).order("created_at"),
+    supabase.from("tdee_proposals").select("*").eq("user_id", me.userId).eq("status", "pending").order("created_at", { ascending: false }).limit(1).maybeSingle(),
   ]);
   const t = day.targets;
+  const nowHm = timeInTz(me.tz);
   const hello = new Date().toLocaleString("es-AR", { hour: "numeric", hour12: false, timeZone: me.tz });
   const h = Number(hello);
   const greet = h < 13 ? "Buen día" : h < 20 ? "Buenas tardes" : "Buenas noches";
@@ -63,7 +71,7 @@ export default async function InicioPage() {
         <Empty title="Faltan datos para tus objetivos">Completá tu perfil y los calculamos.</Empty>
       )}
 
-      <PlannedCardList planned={day.planned.filter((p) => p.status === "pending" && (!p.start_time || p.start_time.slice(0, 5) <= timeInTz(me.tz)))} date={me.today} />
+      <PlannedCardList planned={day.planned.filter((p) => p.status === "pending" && (!p.start_time || p.start_time.slice(0, 5) <= nowHm))} date={me.today} />
 
       {t ? <WaterCard ml={day.waterMl} target={t.waterMl} date={me.today} /> : null}
 
@@ -76,6 +84,15 @@ export default async function InicioPage() {
       <StreaksCard userId={me.userId} />
 
       <PerformanceCard me={me} />
+
+      <DailyCloseCard close={(close.data?.content as { resumen: string; bien: string; ajuste: string } | undefined) ?? null} canGenerate={nowHm >= "19:00" && day.meals.length > 0} />
+
+      <WeeklyCard
+        review={(review.data?.content as { text: string } | undefined) ?? null}
+        goals={goals.data ?? []}
+        proposal={proposal.data ? { id: proposal.data.id, previous: Number(proposal.data.previous_tdee), observed: Number(proposal.data.observed_tdee), proposed: Number(proposal.data.proposed_tdee) } : null}
+        canGenerate={!review.data && (isoWeekday(me.today) === 7 || isoWeekday(me.today) === 1) && reviewedWs <= me.today}
+      />
 
       {msgText ? <AgentCard text={msgText} /> : <AgentCard text="Cargá tu primera comida y te tiro una mano. Sin retos, prometido." />}
     </main>

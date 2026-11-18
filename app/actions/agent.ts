@@ -121,3 +121,59 @@ export async function ideaToDraftAction(idea: MealIdea): Promise<{ ok: true; ite
   );
   return { ok: true, items };
 }
+
+// ── Cierre del día / revisión semanal a demanda ─────────────────────────────
+
+export async function generateDailyCloseAction(): Promise<{ ok: true; text: string } | Fail> {
+  const userId = await getUserId();
+  if (!userId) return { ok: false, error: "Se cortó la sesión" };
+  const supabase = await createClient();
+  const me = await loadMe(supabase, userId);
+  if (!me) return { ok: false, error: "No encontramos tu perfil" };
+  const { generateDailyClose } = await import("@/lib/agent/daily");
+  const r = await generateDailyClose(supabase, me, me.today);
+  if (!r) return { ok: false, error: "No pudimos armar el cierre" };
+  const { revalidatePath } = await import("next/cache");
+  revalidatePath("/inicio");
+  return { ok: true, text: r.text };
+}
+
+export async function generateWeeklyReviewAction(): Promise<{ ok: true } | Fail> {
+  const userId = await getUserId();
+  if (!userId) return { ok: false, error: "Se cortó la sesión" };
+  const supabase = await createClient();
+  const me = await loadMe(supabase, userId);
+  if (!me) return { ok: false, error: "No encontramos tu perfil" };
+  const { generateWeeklyReview } = await import("@/lib/agent/weekly");
+  await generateWeeklyReview(supabase, me);
+  const { revalidatePath } = await import("next/cache");
+  revalidatePath("/inicio");
+  return { ok: true };
+}
+
+export async function toggleWeeklyGoalAction(id: string, done: boolean): Promise<{ ok: boolean }> {
+  const userId = await getUserId();
+  if (!userId) return { ok: false };
+  const supabase = await createClient();
+  const r = await supabase.from("weekly_goals").update({ done }).eq("id", id).eq("user_id", userId);
+  return { ok: !r.error };
+}
+
+export async function respondTdeeAction(id: string, accept: boolean): Promise<{ ok: true } | Fail> {
+  const userId = await getUserId();
+  if (!userId) return { ok: false, error: "Se cortó la sesión" };
+  const supabase = await createClient();
+  const p = await supabase.from("tdee_proposals").select("*").eq("id", id).eq("user_id", userId).eq("status", "pending").maybeSingle();
+  if (!p.data) return { ok: false, error: "La propuesta ya no está disponible" };
+  await supabase.from("tdee_proposals").update({ status: accept ? "accepted" : "rejected" }).eq("id", id);
+  if (accept) {
+    const g = await supabase.from("user_goals").select("expenditure_offset_kcal, manual_override, targets").eq("user_id", userId).order("created_at", { ascending: false }).limit(1).maybeSingle();
+    const offset = (g.data?.expenditure_offset_kcal ?? 0) + (Number(p.data.proposed_tdee) - Number(p.data.previous_tdee));
+    const { saveGoals } = await import("@/app/(onboarding)/onboarding/actions");
+    const r = await saveGoals(null, { offsetKcal: Math.round(offset) });
+    if (!r.ok) return r;
+  }
+  const { revalidatePath } = await import("next/cache");
+  revalidatePath("/", "layout");
+  return { ok: true };
+}

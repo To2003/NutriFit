@@ -151,7 +151,7 @@ export async function replaceSchedule(
 }
 
 /** Calcula y guarda los objetivos. `manual` permite fijar kcal/macros a mano por tipo de día. */
-export async function saveGoals(manual?: StoredTargets | null): Promise<ActionResult> {
+export async function saveGoals(manual?: StoredTargets | null, opts?: { offsetKcal?: number }): Promise<ActionResult> {
   const userId = await getUserId();
   if (!userId) return { ok: false, error: "Se cortó la sesión. Volvé a entrar." };
   const supabase = await createClient();
@@ -168,7 +168,7 @@ export async function saveGoals(manual?: StoredTargets | null): Promise<ActionRe
     weightKg: weight.data?.kg,
     schedule: schedule.data ?? [],
     gym: gym.data,
-    goals: prev.data,
+    goals: opts?.offsetKcal != null ? { expenditure_offset_kcal: opts.offsetKcal } : prev.data,
   });
   if (!inputs) return { ok: false, error: "Faltan datos del onboarding" };
   const week = computeWeek(inputs);
@@ -183,7 +183,7 @@ export async function saveGoals(manual?: StoredTargets | null): Promise<ActionRe
     targets: (manual ?? auto) as unknown as Json,
     manual_override: Boolean(manual),
     tdee_estimate: Math.round(avgExpenditure),
-    expenditure_offset_kcal: prev.data?.expenditure_offset_kcal ?? 0,
+    expenditure_offset_kcal: opts?.offsetKcal ?? prev.data?.expenditure_offset_kcal ?? 0,
     effective_from: todayInTz(details.data.timezone),
   });
   if (ins.error) return { ok: false, error: "No pudimos guardar tus objetivos" };

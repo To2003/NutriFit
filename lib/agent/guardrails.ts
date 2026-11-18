@@ -8,7 +8,7 @@ const BANNED: RegExp[] = [
   /\bquema(r|lo|la|s)? (lo|la|las|los) (que )?(comi|comiste|comido)/,
   /\bquemar (esas|las|esa|la) (calorias|kcal)/,
   /\bcompensa(r|lo|la)?\b/,
-  /\bayun(o|ar|as)\b/,
+  /\bayun(o|ar|es|en)\b/, // "en ayunas" (para pesarse) está permitido
   /\bsalte(a|ar|ate)\w* (la|el|una|un)? ?(comida|cena|almuerzo|desayuno|merienda)/,
   /\bno (cenes|almuerces|desayunes|meriendes|comas nada)\b/,
   /\b(gord[oa]s?|flac[oa]s?|panza|rollo|celulitis|grasita|cuerpo de verano|lomo)\b/,

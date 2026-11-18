@@ -15,6 +15,8 @@ describe("guardrails", () => {
   it("deja pasar mensajes sanos", () => {
     expect(violatesGuardrails("Ayer hubo pizza, hoy le metemos más verde y listo")).toBe(false);
     expect(violatesGuardrails("Sumá un yogur en la merienda para llegar a la proteína")).toBe(false);
+    expect(violatesGuardrails("Pesate 3 mañanas en ayunas")).toBe(false);
+    expect(violatesGuardrails("Probá el ayuno intermitente")).toBe(true);
   });
 });
 
