@@ -8,6 +8,7 @@ import { runAI } from "@/lib/ai/run";
 import { dayContext } from "@/lib/ai/context";
 import { PROFE_PERSONA } from "@/lib/ai/prompts/persona";
 import { timeInTz } from "@/lib/dates";
+import { serverEnv } from "@/lib/env";
 import { violatesGuardrails } from "./guardrails";
 import { fallbackLogFeedback, type DaySnapshot } from "./fallbacks";
 
@@ -55,7 +56,8 @@ export async function feedbackAfterLog(
     const fallback = () => ({ mensaje: fallbackLogFeedback(snap, args.kind) });
 
     const out =
-      args.kind === "water" || args.kind === "weight"
+      // El cupo gratis de Gemini es chico: el feedback por carga sale de las reglas salvo GEMINI_RICH=1
+      args.kind === "water" || args.kind === "weight" || !serverEnv().geminiRich
         ? { data: fallback(), source: "fallback" as const }
         : await runAI({
             supabase,

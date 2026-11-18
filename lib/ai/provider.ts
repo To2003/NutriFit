@@ -47,7 +47,14 @@ const THINKING: Record<Thinking, ThinkingLevel> = {
 };
 /** Si el modelo no acepta thinkingLevel, dejamos de mandarlo (por instancia). */
 let thinkingSupported = true;
-const isTransient = (status: number) => status === 429 || status === 500 || status === 503 || status === 504;
+const isTransient = (status: number) => status === 500 || status === 503 || status === 504;
+
+/** Modelos sin cupo hoy (429): no se vuelven a probar hasta mañana (por instancia del server). */
+const exhausted = new Map<string, string>();
+const today = () => new Date().toISOString().slice(0, 10);
+function isExhausted(model: string): boolean {
+  return exhausted.get(model) === today();
+}
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 /** Concurrencia limitada por instancia: cola simple para no reventar el rate limit del free tier. */
@@ -94,7 +101,7 @@ export class GeminiProvider implements AIProvider {
   constructor(
     apiKey: string,
     private model: string,
-    private fallbackModel: string | null,
+    private fallbackModels: string[] = [],
   ) {
     this.client = new GoogleGenAI({ apiKey });
   }
@@ -133,8 +140,9 @@ export class GeminiProvider implements AIProvider {
   private async call(opts: CallBody): Promise<string> {
     const retries = opts.retries ?? RETRIES;
     const timeoutMs = opts.timeoutMs ?? TIMEOUT_MS;
-    const models = [this.model, ...(this.fallbackModel && this.fallbackModel !== this.model ? [this.fallbackModel] : [])];
-    let lastErr: unknown;
+    const all = [...new Set([this.model, ...this.fallbackModels])];
+    const models = all.filter((m) => !isExhausted(m));
+    let lastErr: unknown = new AIUnavailableError("Todos los modelos sin cupo por hoy", "quota");
     for (const model of models) {
       for (let attempt = 0; attempt <= retries; attempt++) {
         try {
@@ -149,12 +157,17 @@ export class GeminiProvider implements AIProvider {
             attempt--;
             continue;
           }
+          // 429 = sin cupo (por minuto o por día): no se reintenta, se pasa al siguiente modelo
+          if (status === 429) {
+            if (/per.?day|PerDay|daily|RPD/i.test(msg) || attempt === retries) exhausted.set(model, today());
+            break;
+          }
           const transient = isTransient(status) || (e instanceof AIUnavailableError && e.reason === "timeout");
           if (!transient) break; // 400/401/403/404: no tiene sentido reintentar este modelo
-          if (attempt < retries) await sleep((status === 503 || status === 429 ? 1500 : 500) * 2 ** attempt + Math.random() * 300);
+          if (attempt < retries) await sleep((status === 503 ? 1500 : 500) * 2 ** attempt + Math.random() * 300);
         }
       }
-      // si el principal está caído/saturado o no existe, probamos el de respaldo
+      // si el modelo está caído, saturado, sin cupo o no existe, probamos el siguiente
     }
     if (lastErr instanceof AIUnavailableError) throw lastErr;
     const status = lastErr instanceof ApiError ? lastErr.status : 0;
@@ -202,7 +215,7 @@ let provider: AIProvider | null = null;
 export function getAI(): AIProvider {
   if (provider) return provider;
   const env = serverEnv();
-  provider = env.geminiApiKey ? new GeminiProvider(env.geminiApiKey, env.geminiModel, env.geminiFallbackModel) : new NullProvider();
+  provider = env.geminiApiKey ? new GeminiProvider(env.geminiApiKey, env.geminiModel, env.geminiFallbackModels) : new NullProvider();
   return provider;
 }
 
@@ -211,7 +224,8 @@ export function setAI(p: AIProvider | null) {
   provider = p;
 }
 
-/** Solo tests: vuelve a habilitar thinkingLevel. */
+/** Solo tests: vuelve a habilitar thinkingLevel y limpia los modelos sin cupo. */
 export function __resetThinkingSupport() {
   thinkingSupported = true;
+  exhausted.clear();
 }

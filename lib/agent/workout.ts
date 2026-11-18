@@ -5,6 +5,7 @@ import { getAI } from "@/lib/ai/provider";
 import { runAI } from "@/lib/ai/run";
 import { PROFE_PERSONA } from "@/lib/ai/prompts/persona";
 import { violatesGuardrails } from "./guardrails";
+import { serverEnv } from "@/lib/env";
 
 const schema = z.object({ mensaje: z.string().min(3).max(300) });
 
@@ -29,6 +30,7 @@ export function fallbackWorkoutFeedback(s: WorkoutSummary): string {
 export async function workoutFeedback(supabase: ServerClient, userId: string, date: string, s: WorkoutSummary, ref: string): Promise<string> {
   const out = await runAI({
     supabase,
+    enabled: serverEnv().geminiRich,
     call: async () => {
       const r = await getAI().generateJSON({
         system: `${PROFE_PERSONA}\nComentá la sesión de gimnasio en 1–2 oraciones: celebrá lo bueno y dejá un tip de recuperación.`,

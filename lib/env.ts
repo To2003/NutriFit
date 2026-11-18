@@ -15,8 +15,16 @@ export function serverEnv() {
     serviceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY ?? "",
     geminiApiKey: process.env.GEMINI_API_KEY ?? "",
     geminiModel: process.env.GEMINI_MODEL || "gemini-3.8-flash",
-    /** Opcional: modelo de respaldo si el principal está saturado (503) o no existe. */
-    geminiFallbackModel: process.env.GEMINI_FALLBACK_MODEL || null,
+    /**
+     * Modelos de respaldo, en orden (separados por coma). En el plan gratis cada modelo tiene su propio
+     * cupo diario, así que encadenarlos multiplica las consultas disponibles.
+     */
+    geminiFallbackModels: (process.env.GEMINI_FALLBACK_MODELS ?? process.env.GEMINI_FALLBACK_MODEL ?? "gemini-3-flash,gemini-2.5-flash-lite")
+      .split(",")
+      .map((m) => m.trim())
+      .filter(Boolean),
+    /** "1" = usar IA también en feedback por carga, cierre del día y sesiones (requiere más cupo). */
+    geminiRich: process.env.GEMINI_RICH === "1",
     usdaApiKey: process.env.USDA_API_KEY ?? "",
     vapidPrivateKey: process.env.VAPID_PRIVATE_KEY ?? "",
     vapidSubject: process.env.VAPID_SUBJECT || "mailto:admin@example.com",

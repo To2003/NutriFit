@@ -8,6 +8,7 @@ import { runAI } from "@/lib/ai/run";
 import { dayContext, profileContext } from "@/lib/ai/context";
 import { PROFE_PERSONA } from "@/lib/ai/prompts/persona";
 import { addDays } from "@/lib/dates";
+import { serverEnv } from "@/lib/env";
 import { kcalFloor } from "@/lib/calc/targets";
 import { violatesGuardrails } from "./guardrails";
 import { fallbackDailyClose } from "./fallbacks";
@@ -49,6 +50,8 @@ export async function generateDailyClose(supabase: ServerClient, me: Me, date: s
 
   const out = await runAI({
     supabase,
+    // El cupo gratis es chico: el cierre sale de las reglas salvo GEMINI_RICH=1
+    enabled: serverEnv().geminiRich,
     call: async () => {
       const r = await getAI().generateJSON({
         system: `${PROFE_PERSONA}

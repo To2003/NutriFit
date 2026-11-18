@@ -2,8 +2,8 @@ import "server-only";
 import type { ServerClient } from "@/lib/supabase/server";
 import { AIUnavailableError } from "./provider";
 
-/** Tope blando de llamadas por usuario y día (free tier). */
-export const DAILY_AI_CAP = 80;
+/** Tope blando de llamadas por usuario y día: el cupo gratis de Gemini es por proyecto y se comparte. */
+export const DAILY_AI_CAP = 15;
 
 export type AIOutcome<T> = { data: T; source: "ai" | "fallback"; reason?: string };
 
@@ -15,7 +15,10 @@ export async function runAI<T>(args: {
   supabase?: ServerClient | null;
   call: () => Promise<T>;
   fallback: () => T | Promise<T>;
+  /** false = directo a las reglas, sin gastar cupo ni loguear. */
+  enabled?: boolean;
 }): Promise<AIOutcome<T>> {
+  if (args.enabled === false) return { data: await args.fallback(), source: "fallback", reason: "disabled" };
   try {
     if (args.supabase) {
       const { data: calls } = await args.supabase.rpc("bump_ai_usage", { failed: false });
