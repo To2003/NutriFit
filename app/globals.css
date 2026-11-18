@@ -1,26 +1,122 @@
 @import "tailwindcss";
 
+/* ── NutriFit · "Cancha nocturna" ─────────────────────────────────────────── */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #0b0d0c;
+  --surface: #151917;
+  --surface-2: #1d2320;
+  --line: #2a312d;
+  --text: #eef2ec;
+  --muted: #8e978f;
+  --accent: #c6ff3d;
+  --accent-ink: #11160a;
+  --alert: #ff6b3d;
+  --water: #3dd6ff;
+  --carbs: #ffc93d;
+  --protein: #c6ff3d;
+  --fat: #ff8f6b;
+  --ok: #6ee7a8;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  color-scheme: dark;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-line: var(--line);
+  --color-text: var(--text);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-alert: var(--alert);
+  --color-water: var(--water);
+  --color-carbs: var(--carbs);
+  --color-protein: var(--protein);
+  --color-fat: var(--fat);
+  --color-ok: var(--ok);
+  --font-sans: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+  --font-score: var(--font-score), "Arial Narrow", sans-serif;
+  --radius-chip: 10px;
+  --radius-card: 18px;
+  --radius-sheet: 28px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  background: var(--bg);
+  -webkit-tap-highlight-color: transparent;
+  text-size-adjust: 100%;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior-y: none;
+}
+
+/* Números de marcador */
+.score {
+  font-family: var(--font-score);
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  line-height: 0.9;
+}
+
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Línea de cancha: separador con la marca central */
+.court-line {
+  position: relative;
+  height: 1px;
+  background: var(--line);
+}
+.court-line::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: -3px;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  transform: translateX(-50%);
+  background: var(--bg);
+  border: 1px solid var(--line);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
